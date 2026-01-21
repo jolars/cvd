@@ -1,0 +1,142 @@
+% \iffalse meta-comment -------------------------------------------------------
+% CVD - Color Vision Deficiency simulation for LaTeX
+% Copyright 2026 Johan Larsson
+%
+% This work is licensed under a Creative Commons Attribution-ShareAlike 4.0
+% International License (https://creativecommons.org/licenses/by-sa/4.0/).
+% ------------------------------------------------------------------------- \fi
+% \iffalse
+%<*package>
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{cvd}[2026-01-21 v0.1.0 Color Vision Deficiency Simulation]
+%</package>
+% \fi
+% \CheckSum{0}
+% \StopEventually{}
+% \iffalse
+%<*package>
+% ------------------------------------------------------------------------- \fi
+%
+% \subsection{Package Dependencies}
+%
+% Load required packages.
+%
+%    \begin{macrocode}
+\RequirePackage{iftex}
+\RequirePackage{xcolor}
+% for optional \includegraphics patching
+\RequirePackage{keyval}
+%    \end{macrocode}
+%
+% \subsection{Engine Check}
+%
+% Currently only LuaTeX is fully supported.
+%
+%    \begin{macrocode}
+\ifluatex\else
+  \PackageError{cvd}{LuaTeX required}{%
+    This package currently only works with LuaLaTeX.\MessageBreak
+    pdfLaTeX support is under development.}
+\fi
+%    \end{macrocode}
+%
+% \subsection{Color Space Enforcement}
+%
+% Force RGB color model for consistent transformations.
+%
+%    \begin{macrocode}
+\selectcolormodel{rgb}
+%    \end{macrocode}
+%
+% \subsection{Load Lua Module}
+%
+% Load the Lua module that implements the CVD transformations.
+%
+%    \begin{macrocode}
+\directlua{cvd = require("cvd"); cvd.install_pdf_image_hook()}
+%    \end{macrocode}
+%
+% \subsection{Hook into xcolor}
+%
+% Use xcolor's \XC@bcolor hook to transform RGB values before display.
+%
+%    \begin{macrocode}
+\def\XC@bcolor{%
+  \directlua{token.set_macro("current@color", cvd.transform_current_color("\luaescapestring{\current@color}"), "global")}%
+}
+%    \end{macrocode}
+%
+% \subsection{User Commands}
+%
+% \begin{macro}{\cvdtype}
+% Set the type of color vision deficiency to simulate.
+%
+%    \begin{macrocode}
+\newcommand{\cvdtype}[1]{%
+  \directlua{cvd.set_type("#1")}%
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\cvdseverity}
+% Set the severity of the simulation (0.0 to 1.0).
+%
+%    \begin{macrocode}
+\newcommand{\cvdseverity}[1]{%
+  \directlua{cvd.set_severity(#1)}%
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\cvdalgorithm}
+% Set the algorithm to use (brettel or machado).
+%
+%    \begin{macrocode}
+\newcommand{\cvdalgorithm}[1]{%
+  \directlua{cvd.set_algorithm("#1")}%
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\cvdenable}
+% Enable CVD simulation.
+%
+%    \begin{macrocode}
+\newcommand{\cvdenable}{%
+  \directlua{cvd.enable()}%
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\cvddisable}
+% Disable CVD simulation.
+%
+%    \begin{macrocode}
+\newcommand{\cvddisable}{%
+  \directlua{cvd.disable()}%
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{Package Options}
+%
+% Handle package options for deficiency type and severity.
+%
+%    \begin{macrocode}
+\DeclareOption{protanopia}{\AtEndOfPackage{\cvdtype{protanopia}\cvdseverity{1.0}}}
+\DeclareOption{deuteranopia}{\AtEndOfPackage{\cvdtype{deuteranopia}\cvdseverity{1.0}}}
+\DeclareOption{tritanopia}{\AtEndOfPackage{\cvdtype{tritanopia}\cvdseverity{1.0}}}
+\DeclareOption{protanomaly}{\AtEndOfPackage{\cvdtype{protanopia}\cvdseverity{0.5}}}
+\DeclareOption{deuteranomaly}{\AtEndOfPackage{\cvdtype{deuteranopia}\cvdseverity{0.5}}}
+\DeclareOption{tritanomaly}{\AtEndOfPackage{\cvdtype{tritanopia}\cvdseverity{0.5}}}
+\DeclareOption{brettel}{\AtEndOfPackage{\cvdalgorithm{brettel}}}
+\DeclareOption{machado}{\AtEndOfPackage{\cvdalgorithm{machado}}}
+\DeclareOption*{\PackageWarning{cvd}{Unknown option `\CurrentOption'}}
+\ProcessOptions\relax
+%    \end{macrocode}
+%
+% \iffalse
+%</package>
+% \fi
+% \Finale
+\endinput

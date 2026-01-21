@@ -1,0 +1,26 @@
+version: "3"
+
+tasks:
+  install:
+    desc: Install the latex package locally
+    cmds:
+      - l3build install
+
+  extract-dtx-docs:
+    desc: Extract and convert DTX documentation to Markdown
+    cmds:
+      - texlua scripts/extract-dtx-docs.lua
+
+  test:
+    desc: Run the test suite, checking package functionality
+    deps:
+      - generate-example-images
+    cmds:
+      - l3build-wrapped check
+
+  ctan:
+    desc: Prepare the package for CTAN submission
+    deps:
+      - build-manual
+    cmds:
+      - l3build-wrapped ctan
