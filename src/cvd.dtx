@@ -147,6 +147,41 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\cvddefinecolor}
+%
+% Define a new color by applying CVD transformation to an existing color.
+% Usage: \cs{cvddefinecolor}\oarg{options}\marg{source color}\marg{target color}
+%
+%    \begin{macrocode}
+\tl_new:N \l__cvd_model_tl
+\tl_new:N \l__cvd_values_tl
+
+\NewDocumentCommand \cvddefinecolor { O{} m m }
+{
+  % Extract the original color
+  \extractcolorspecs{#2}{\l__cvd_model_tl}{\l__cvd_values_tl}
+  
+  % Apply CVD transformation with specified settings
+  \keys_set:nn { cvd } { #1 }
+  \cvdenable
+  
+  % Transform the RGB values directly via Lua
+  \directlua{
+    local~values~=~"\luaescapestring{\l__cvd_values_tl}"
+    local~r,~g,~b~=~values:match("([^,]+),([^,]+),([^,]+)")
+    r,~g,~b~=~tonumber(r),~tonumber(g),~tonumber(b)
+    r,~g,~b~=~cvd.transform(r,~g,~b)
+    token.set_macro("l__cvd_values_tl",~string.format("\csstring\%.6f,\csstring\%.6f,\csstring\%.6f",~r,~g,~b))
+  }
+  
+  % Define the color with transformed values
+  \use:x { \definecolor {#3} { \exp_not:V \l__cvd_model_tl } { \exp_not:V \l__cvd_values_tl } }
+  
+  \cvddisable
+}
+%    \end{macrocode}
+% \end{macro}
+%
 % \subsection{Package Configuration}
 %
 % Define keys for package configuration using \pkg{l3keys}. Keys are available

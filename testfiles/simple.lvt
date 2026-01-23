@@ -1,4 +1,178 @@
 \input{regression-test.tex}
 \documentclass{minimal}
-
 \usepackage{cvd}
+
+\ExplSyntaxOn
+\START
+
+% Test 1: Known value - Protan 1.0 on rgb(0.2, 0.3, 0.9)
+% Expected: R≈0.16185, G≈0.34807, B≈0.93158
+\TEST{Protan~1.0~transformation}{
+  \definecolor{testcolor}{rgb}{0.2,0.3,0.9}
+  \cvddefinecolor[type=protanopia,severity=1.0]{testcolor}{result}
+  \extractcolorspecs{result}{\model}{\values}
+  \TYPE{Input:~rgb(0.2,~0.3,~0.9)}
+  \TYPE{Output:~\values}
+  \cvddisable
+}
+
+% Test 2: Deutan 0.66 on rgb(0.2, 0.3, 0.9)
+% Expected: R≈0.14263, G≈0.30312, B≈0.88819
+\TEST{Deutan~0.66~transformation}{
+  \definecolor{testcolor}{rgb}{0.2,0.3,0.9}
+  \cvddefinecolor[type=deuteranopia,severity=0.66]{testcolor}{result}
+  \extractcolorspecs{result}{\model}{\values}
+  \TYPE{Input:~rgb(0.2,~0.3,~0.9)}
+  \TYPE{Output:~\values}
+  \cvddisable
+}
+
+% Test 3: Tritan 0.09 on rgb(0.2, 0.3, 0.9)
+% Expected: R≈0.19624, G≈0.30582, B≈0.86509
+\TEST{Tritan~0.09~transformation}{
+  \definecolor{testcolor}{rgb}{0.2,0.3,0.9}
+  \cvddefinecolor[type=tritanopia,severity=0.09]{testcolor}{result}
+  \extractcolorspecs{result}{\model}{\values}
+  \TYPE{Input:~rgb(0.2,~0.3,~0.9)}
+  \TYPE{Output:~\values}
+  \cvddisable
+}
+
+% Test 4: Black remains black
+\TEST{Black~remains~black}{
+  \definecolor{testcolor}{rgb}{0.0,0.0,0.0}
+  \cvddefinecolor[type=protanopia,severity=1.0]{testcolor}{result}
+  \extractcolorspecs{result}{\model}{\values}
+  \TYPE{Input:~rgb(0.0,~0.0,~0.0)}
+  \TYPE{Output:~\values}
+  \cvddisable
+}
+
+% Test 5: Identity at severity 0
+\TEST{Identity~at~severity~0}{
+  \definecolor{testcolor}{rgb}{0.5,0.3,0.8}
+  \cvddefinecolor[type=protanopia,severity=0.0]{testcolor}{result}
+  \extractcolorspecs{result}{\model}{\values}
+  \TYPE{Input:~rgb(0.5,~0.3,~0.8)}
+  \TYPE{Output:~\values}
+  \cvddisable
+}
+
+% Test 6: Preset shortcuts
+\TEST{Protanomaly~preset}{
+  \definecolor{testcolor}{rgb}{1.0,0.0,0.0}
+  \cvddefinecolor[protanomaly]{testcolor}{result}
+  \extractcolorspecs{result}{\model}{\values}
+  \TYPE{Input:~rgb(1.0,~0.0,~0.0)}
+  \TYPE{Output:~\values}
+  \cvddisable
+}
+
+\TEST{Deuteranomaly~preset}{
+  \definecolor{testcolor}{rgb}{0.0,1.0,0.0}
+  \cvddefinecolor[deuteranomaly]{testcolor}{result}
+  \extractcolorspecs{result}{\model}{\values}
+  \TYPE{Input:~rgb(0.0,~1.0,~0.0)}
+  \TYPE{Output:~\values}
+  \cvddisable
+}
+
+
+% Test 8: Different CVD types produce different results
+\TEST{Different~CVD~types~differ}{
+  \definecolor{testcolor}{rgb}{0.9,0.8,0.2}
+  \cvddefinecolor[type=protanopia,severity=0.7]{testcolor}{protan_result}
+  \cvddefinecolor[type=deuteranopia,severity=0.7]{testcolor}{deutan_result}
+  \cvddefinecolor[type=tritanopia,severity=0.7]{testcolor}{tritan_result}
+  \extractcolorspecs{protan_result}{\model}{\protan_values}
+  \extractcolorspecs{deutan_result}{\model}{\deutan_values}
+  \extractcolorspecs{tritan_result}{\model}{\tritan_values}
+  \TYPE{Protan:~\protan_values}
+  \TYPE{Deutan:~\deutan_values}
+  \TYPE{Tritan:~\tritan_values}
+  \cvddisable
+}
+
+% Test 9: Intermediate severity interpolation
+\TEST{Intermediate~severity~interpolation}{
+  \definecolor{testcolor}{rgb}{0.5,0.3,0.8}
+  \cvddefinecolor[type=protanopia,severity=0.0]{testcolor}{result_zero}
+  \cvddefinecolor[type=protanopia,severity=0.5]{testcolor}{result_half}
+  \cvddefinecolor[type=protanopia,severity=1.0]{testcolor}{result_full}
+  \extractcolorspecs{result_zero}{\model}{\values_zero}
+  \extractcolorspecs{result_half}{\model}{\values_half}
+  \extractcolorspecs{result_full}{\model}{\values_full}
+  \TYPE{Severity~0.0:~\values_zero}
+  \TYPE{Severity~0.5:~\values_half}
+  \TYPE{Severity~1.0:~\values_full}
+  \cvddisable
+}
+
+% Test 10: White color stays in valid range
+\TEST{White~color~clamping}{
+  \definecolor{testcolor}{rgb}{1.0,1.0,1.0}
+  \cvddefinecolor[type=protanopia,severity=1.0]{testcolor}{result}
+  \extractcolorspecs{result}{\model}{\values}
+  \TYPE{Input:~rgb(1.0,~1.0,~1.0)}
+  \TYPE{Output:~\values}
+  \cvddisable
+}
+
+% Test 11: Linearity property
+\TEST{Linearity~property}{
+  \definecolor{color1}{rgb}{0.2,0.4,0.6}
+  \definecolor{color2}{rgb}{0.8,0.3,0.1}
+  \cvddefinecolor[type=protanopia,severity=0.5]{color1}{result1}
+  \cvddefinecolor[type=protanopia,severity=0.5]{color2}{result2}
+  \extractcolorspecs{result1}{\model}{\valuesone}
+  \extractcolorspecs{result2}{\model}{\valuestwo}
+  \TYPE{Transform(color1):~\valuesone}
+  \TYPE{Transform(color2):~\valuestwo}
+  \definecolor{combined}{rgb}{0.62,0.33,0.19}
+  \cvddefinecolor[type=protanopia,severity=0.5]{combined}{result_combined}
+  \extractcolorspecs{result_combined}{\model}{\valuescombined}
+  \TYPE{Transform(0.3*color1+0.7*color2):~\valuescombined}
+  \cvddisable
+}
+
+% Test 12: Boundary severity values
+\TEST{Boundary~severity~values}{
+  \definecolor{testcolor}{rgb}{0.6,0.4,0.2}
+  \cvddefinecolor[type=deuteranopia,severity=0.01]{testcolor}{result_tiny}
+  \cvddefinecolor[type=deuteranopia,severity=0.99]{testcolor}{result_near_max}
+  \cvddefinecolor[type=deuteranopia,severity=1.0]{testcolor}{result_max}
+  \extractcolorspecs{result_tiny}{\model}{\values_tiny}
+  \extractcolorspecs{result_near_max}{\model}{\values_near_max}
+  \extractcolorspecs{result_max}{\model}{\values_max}
+  \TYPE{Severity~0.01:~\values_tiny}
+  \TYPE{Severity~0.99:~\values_near_max}
+  \TYPE{Severity~1.00:~\values_max}
+  \cvddisable
+}
+
+% Test 13: Monotonicity with severity
+\TEST{Monotonicity~with~severity}{
+  \definecolor{testcolor}{rgb}{0.3,0.7,0.1}
+  \cvddefinecolor[type=protanopia,severity=0.0]{testcolor}{result_0}
+  \cvddefinecolor[type=protanopia,severity=0.2]{testcolor}{result_2}
+  \cvddefinecolor[type=protanopia,severity=0.4]{testcolor}{result_4}
+  \cvddefinecolor[type=protanopia,severity=0.6]{testcolor}{result_6}
+  \cvddefinecolor[type=protanopia,severity=0.8]{testcolor}{result_8}
+  \cvddefinecolor[type=protanopia,severity=1.0]{testcolor}{result_10}
+  \extractcolorspecs{result_0}{\model}{\vsevzero}
+  \extractcolorspecs{result_2}{\model}{\vsevtwo}
+  \extractcolorspecs{result_4}{\model}{\vsevfour}
+  \extractcolorspecs{result_6}{\model}{\vsevsix}
+  \extractcolorspecs{result_8}{\model}{\vseveight}
+  \extractcolorspecs{result_10}{\model}{\vsevten}
+  \TYPE{0.0:~\vsevzero}
+  \TYPE{0.2:~\vsevtwo}
+  \TYPE{0.4:~\vsevfour}
+  \TYPE{0.6:~\vsevsix}
+  \TYPE{0.8:~\vseveight}
+  \TYPE{1.0:~\vsevten}
+  \cvddisable
+}
+
+\ExplSyntaxOff
+\END
