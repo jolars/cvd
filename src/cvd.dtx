@@ -7,8 +7,8 @@
 % ------------------------------------------------------------------------- \fi
 % \iffalse
 %<*package>
-\NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{cvd}[2026-01-21 v0.1.0 Color Vision Deficiency Simulation]
+\ProvidesExplPackage{cvd}{2026-01-21}{0.1.0}
+  {Color Vision Deficiency Simulation}
 %</package>
 % \fi
 % \CheckSum{0}
@@ -24,8 +24,7 @@
 %    \begin{macrocode}
 \RequirePackage{iftex}
 \RequirePackage{xcolor}
-% for optional \includegraphics patching
-\RequirePackage{keyval}
+\RequirePackage{graphicx}
 %    \end{macrocode}
 %
 % \subsection{Engine Check}
@@ -33,11 +32,16 @@
 % Currently only LuaTeX is fully supported.
 %
 %    \begin{macrocode}
-\ifluatex\else
-  \PackageError{cvd}{LuaTeX required}{%
-    This package currently only works with LuaLaTeX.\MessageBreak
-    pdfLaTeX support is under development.}
-\fi
+\sys_if_engine_luatex:F
+  {
+    \msg_error:nn { cvd } { luatex-required }
+  }
+\msg_new:nnn { cvd } { luatex-required }
+  {
+    LuaTeX~required.\\
+    This~package~currently~only~works~with~LuaLaTeX.\\
+    pdfLaTeX~support~is~under~development.
+  }
 %    \end{macrocode}
 %
 % \subsection{Color Space Enforcement}
@@ -65,9 +69,15 @@
 % This handles text colors, color boxes, and other \texttt{xcolor}-based content.
 %
 %    \begin{macrocode}
-\def\XC@bcolor{%
-  \directlua{token.set_macro("current@color", cvd.transform_current_color("\luaescapestring{\current@color}"), "global")}%
-}
+\cs_set:Npn \XC@bcolor
+  {
+    \directlua
+      {
+        token.set_macro("current@color",~
+          cvd.transform_current_color("\luaescapestring{\current@color}"),~
+          "global")
+      }
+  }
 %    \end{macrocode}
 %
 % \subsection{User Commands}
@@ -77,9 +87,10 @@
 % Set the type of color vision deficiency to simulate.
 %
 %    \begin{macrocode}
-\newcommand{\cvdtype}[1]{%
-  \directlua{cvd.set_type("#1")}%
-}
+\NewDocumentCommand \cvdtype { m }
+  {
+    \directlua { cvd.set_type("#1") }
+  }
 %    \end{macrocode}
 % \end{macro}
 %
@@ -88,9 +99,10 @@
 % Set the severity of the simulation (0.0 to 1.0).
 %
 %    \begin{macrocode}
-\newcommand{\cvdseverity}[1]{%
-  \directlua{cvd.set_severity(#1)}%
-}
+\NewDocumentCommand \cvdseverity { m }
+  {
+    \directlua { cvd.set_severity(#1) }
+  }
 %    \end{macrocode}
 % \end{macro}
 %
@@ -99,9 +111,10 @@
 % Set the algorithm to use (\texttt{brettel} or \texttt{machado}).
 %
 %    \begin{macrocode}
-\newcommand{\cvdalgorithm}[1]{%
-  \directlua{cvd.set_algorithm("#1")}%
-}
+\NewDocumentCommand \cvdalgorithm { m }
+  {
+    \directlua { cvd.set_algorithm("#1") }
+  }
 %    \end{macrocode}
 % \end{macro}
 %
@@ -110,9 +123,10 @@
 % Enable CVD simulation.
 %
 %    \begin{macrocode}
-\newcommand{\cvdenable}{%
-  \directlua{cvd.enable()}%
-}
+\NewDocumentCommand \cvdenable { }
+  {
+    \directlua { cvd.enable() }
+  }
 %    \end{macrocode}
 % \end{macro}
 %
@@ -121,9 +135,10 @@
 % Disable CVD simulation.
 %
 %    \begin{macrocode}
-\newcommand{\cvddisable}{%
-  \directlua{cvd.disable()}%
-}
+\NewDocumentCommand \cvddisable { }
+  {
+    \directlua { cvd.disable() }
+  }
 %    \end{macrocode}
 % \end{macro}
 %
@@ -131,28 +146,48 @@
 % Include a graphics file with CVD transformation applied to raster images.
 %
 %    \begin{macrocode}
-\newcommand{\cvdincludegraphics}[2][]{%
-  \edef\cvd@imgpath{\directlua{tex.sprint(cvd.get_image_path("\luaescapestring{#2}"))}}%
-  \includegraphics[#1]{\cvd@imgpath}%
-}
+\tl_new:N \l__cvd_imgpath_tl
+\NewDocumentCommand \cvdincludegraphics { O{} m }
+  {
+    \tl_set:Nx \l__cvd_imgpath_tl
+      {
+        \directlua
+          { tex.sprint(cvd.get_image_path("\luaescapestring{#2}")) }
+      }
+    \exp_args:NV \includegraphics [#1] \l__cvd_imgpath_tl
+  }
 %    \end{macrocode}
 % \end{macro}
 %
 % \subsection{Package Options}
 %
-% Handle package options for deficiency type and severity.
+% Handle package options for deficiency type and severity using \pkg{l3keys}.
+% Since this is a pure expl3 package, we define a user-facing command instead
+% of processing options at load time.
 %
 %    \begin{macrocode}
-\DeclareOption{protanopia}{\AtEndOfPackage{\cvdtype{protanopia}\cvdseverity{1.0}}}
-\DeclareOption{deuteranopia}{\AtEndOfPackage{\cvdtype{deuteranopia}\cvdseverity{1.0}}}
-\DeclareOption{tritanopia}{\AtEndOfPackage{\cvdtype{tritanopia}\cvdseverity{1.0}}}
-\DeclareOption{protanomaly}{\AtEndOfPackage{\cvdtype{protanopia}\cvdseverity{0.5}}}
-\DeclareOption{deuteranomaly}{\AtEndOfPackage{\cvdtype{deuteranopia}\cvdseverity{0.5}}}
-\DeclareOption{tritanomaly}{\AtEndOfPackage{\cvdtype{tritanopia}\cvdseverity{0.5}}}
-\DeclareOption{brettel}{\AtEndOfPackage{\cvdalgorithm{brettel}}}
-\DeclareOption{machado}{\AtEndOfPackage{\cvdalgorithm{machado}}}
-\DeclareOption*{\PackageWarning{cvd}{Unknown option `\CurrentOption'}}
-\ProcessOptions\relax
+\keys_define:nn { cvd }
+  {
+    type      .code:n = { \cvdtype{#1} } ,
+    severity  .code:n = { \cvdseverity{#1} } ,
+    algorithm .code:n = { \cvdalgorithm{#1} } ,
+    protanopia   .code:n = { \cvdtype{protanopia} \cvdseverity{1.0} } ,
+    deuteranopia .code:n = { \cvdtype{deuteranopia} \cvdseverity{1.0} } ,
+    tritanopia   .code:n = { \cvdtype{tritanopia} \cvdseverity{1.0} } ,
+    protanomaly  .code:n = { \cvdtype{protanopia} \cvdseverity{0.5} } ,
+    deuteranomaly .code:n = { \cvdtype{deuteranopia} \cvdseverity{0.5} } ,
+    tritanomaly  .code:n = { \cvdtype{tritanopia} \cvdseverity{0.5} } ,
+    brettel      .code:n = { \cvdalgorithm{brettel} } ,
+    machado      .code:n = { \cvdalgorithm{machado} } ,
+    unknown      .code:n = 
+      { \msg_warning:nnx { cvd } { unknown-option } { \l_keys_key_str } }
+  }
+\msg_new:nnn { cvd } { unknown-option }
+  { Unknown~option~'#1'. }
+\NewDocumentCommand \cvdset { m }
+  {
+    \keys_set:nn { cvd } { #1 }
+  }
 %    \end{macrocode}
 %
 % \iffalse
