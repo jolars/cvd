@@ -1,0 +1,51 @@
+\documentclass{ltxdoc}
+
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{graphicx}
+\usepackage{microtype}
+\usepackage[hyphens]{url}
+\usepackage[colorlinks=true,hidelinks,pdfa]{hyperref}
+\usepackage{minted}
+\usepackage{xcolor}
+\usepackage{siunitx}
+
+\newcommand{\DescribeOption}[4]{
+  \DescribeMacro{#1}
+  \begin{minipage}[t]{\textwidth}
+    \textit{\textbf{\textcolor{mLightGreen}{#2}}}\dotfill\,#3\par
+    \begingroup
+    \vspace{0.5em}#4\par
+    \endgroup
+  \end{minipage}
+}
+
+\setminted{
+  style=xcode,
+  linenos,
+  numbersep=4pt,
+  escapeinside=||,
+  framesep=6pt,
+  fontsize=\small,
+}
+
+\newmintinline{latex}{fontsize=\normalsize}
+
+\def\cvdversion{0.1.0}
+
+\title{The cvd package (v\cvdversion)}
+\author{Johan Larsson}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\section{Introduction}
+
+\section{Implementation}
+
+\DocInput{cvd.dtx}
+
+\end{document}

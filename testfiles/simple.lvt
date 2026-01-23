@@ -1,0 +1,5 @@
+\documentclass{minimal}
+
+\usepackage{cvd}
+
+\input{molochexample}

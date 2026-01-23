@@ -33,6 +33,9 @@
             microtype
             koma-script
             booktabs
+            minted
+            xcolor
+            upquote
             mdwtools
             caption
             float

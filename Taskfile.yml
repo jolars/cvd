@@ -6,6 +6,11 @@ tasks:
     cmds:
       - l3build install
 
+  docs:
+    desc: Build the package documentation
+    cmds:
+      - l3build-wrapped doc
+
   extract-dtx-docs:
     desc: Extract and convert DTX documentation to Markdown
     cmds:
