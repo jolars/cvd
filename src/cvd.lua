@@ -387,10 +387,26 @@ function M.get_image_path(img_path)
 		full_path = img_path
 	end
 	
-	-- Generate transformed filename with severity
-	local base = img_path:match("(.+)%.[^.]+$") or img_path
+	-- Respect -output-directory if set
+	local output_dir = status.output_directory
+	local base_dir = output_dir or "."
+	
+	-- Create cache directory if it doesn't exist
+	local cache_dir = base_dir .. "/.cvd-cache"
+	local cache_stat = lfs.attributes(cache_dir)
+	if not cache_stat then
+		-- Create output_dir first if it doesn't exist
+		if output_dir and not lfs.attributes(output_dir) then
+			lfs.mkdir(output_dir)
+		end
+		lfs.mkdir(cache_dir)
+	end
+	
+	-- Generate transformed filename with severity in cache directory
+	local base = img_path:match("([^/\\]+)$") or img_path -- extract just the filename
+	local name_only = base:match("(.+)%.[^.]+$") or base  -- remove extension
 	local severity_str = string.format("%.1f", M.current_severity)
-	local transformed = base .. "-cvd-" .. M.current_type .. "-" .. severity_str .. "." .. ext
+	local transformed = cache_dir .. "/" .. name_only .. "-cvd-" .. M.current_type .. "-" .. severity_str .. "." .. ext
 	
 	-- Check if we need to transform (file doesn't exist or is older)
 	local need_transform = true
