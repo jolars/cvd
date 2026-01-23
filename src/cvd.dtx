@@ -51,6 +51,8 @@
 % \subsection{Load Lua Module}
 %
 % Load the Lua module that implements the CVD transformations.
+% The \texttt{install\_pdf\_image\_hook()} function registers a callback
+% that transforms colors in embedded PDF pages (vector graphics only).
 %
 %    \begin{macrocode}
 \directlua{cvd = require("cvd"); cvd.install_pdf_image_hook()}
@@ -59,6 +61,7 @@
 % \subsection{Hook into xcolor}
 %
 % Use xcolor's \XC@bcolor hook to transform RGB values before display.
+% This handles text colors, color boxes, and other xcolor-based content.
 %
 %    \begin{macrocode}
 \def\XC@bcolor{%

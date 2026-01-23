@@ -219,4 +219,49 @@ function M.transform_current_color(color_str)
 	return color_str
 end
 
+-- Transform RGB color operators in PDF page content streams
+function M.process_pdf_image_content(stream)
+	if not M.enabled or not M.current_type then
+		return stream
+	end
+	
+	-- Transform RGB fill colors (rg operator)
+	stream = string.gsub(stream, "([%d.]+) +([%d.]+) +([%d.]+) +rg", function(r, g, b)
+		r, g, b = tonumber(r), tonumber(g), tonumber(b)
+		local r_new, g_new, b_new = M.transform(r, g, b)
+		return string.format("%.6f %.6f %.6f rg", r_new, g_new, b_new)
+	end)
+	
+	-- Transform RGB stroke colors (RG operator)
+	stream = string.gsub(stream, "([%d.]+) +([%d.]+) +([%d.]+) +RG", function(r, g, b)
+		r, g, b = tonumber(r), tonumber(g), tonumber(b)
+		local r_new, g_new, b_new = M.transform(r, g, b)
+		return string.format("%.6f %.6f %.6f RG", r_new, g_new, b_new)
+	end)
+	
+	-- Transform RGB colors in scn/SCN operators (used with /DeviceRGB color space)
+	stream = string.gsub(stream, "([%d.]+) +([%d.]+) +([%d.]+) +scn", function(r, g, b)
+		r, g, b = tonumber(r), tonumber(g), tonumber(b)
+		local r_new, g_new, b_new = M.transform(r, g, b)
+		return string.format("%.6f %.6f %.6f scn", r_new, g_new, b_new)
+	end)
+	
+	stream = string.gsub(stream, "([%d.]+) +([%d.]+) +([%d.]+) +SCN", function(r, g, b)
+		r, g, b = tonumber(r), tonumber(g), tonumber(b)
+		local r_new, g_new, b_new = M.transform(r, g, b)
+		return string.format("%.6f %.6f %.6f SCN", r_new, g_new, b_new)
+	end)
+	
+	return stream
+end
+
+-- Install the PDF image content hook
+function M.install_pdf_image_hook()
+	-- Enable PDF stream recompression (required for the callback to work)
+	pdf.setrecompress(1)
+	
+	-- Register the callback using luatexbase for LaTeX compatibility
+	luatexbase.add_to_callback("process_pdf_image_content", M.process_pdf_image_content, "cvd_pdf_transform")
+end
+
 return M
