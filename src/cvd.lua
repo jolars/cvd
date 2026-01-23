@@ -3,26 +3,6 @@
 
 local M = {}
 
--- Brettel matrices (Brettel, Viénot & Mollon 1997)
--- Simple, fast, full dichromacy only
-M.brettel_matrices = {
-	protanopia = {
-		{ 0.56667, 0.43333, 0.00000 },
-		{ 0.55833, 0.44167, 0.00000 },
-		{ 0.00000, 0.24167, 0.75833 },
-	},
-	deuteranopia = {
-		{ 0.625, 0.375, 0.000 },
-		{ 0.700, 0.300, 0.000 },
-		{ 0.000, 0.300, 0.700 },
-	},
-	tritanopia = {
-		{ 0.95, 0.05, 0.000 },
-		{ 0.00, 0.43, 0.567 },
-		{ 0.00, 0.48, 0.525 },
-	},
-}
-
 -- Machado matrices (Machado, Oliveira & Fernandes 2009)
 -- Physiologically accurate, supports severity levels 0.0-1.0
 M.machado_matrices = {
@@ -71,7 +51,6 @@ M.machado_matrices = {
 M.current_type = nil
 M.current_severity = 1.0
 M.enabled = false
-M.algorithm = "machado" -- "brettel" or "machado"
 
 -- Clamp value to [0,1] range
 local function clamp(value)
@@ -122,49 +101,24 @@ function M.transform(r, g, b)
 		return r, g, b
 	end
 
-	local matrix
-
-	if M.algorithm == "machado" then
-		-- Machado: interpolate pre-calculated severity matrices
-		matrix = get_machado_matrix(M.current_type, M.current_severity)
-		if not matrix then
-			texio.write_nl("CVD Warning: Unknown deficiency type '" .. tostring(M.current_type) .. "'")
-			return r, g, b
-		end
-
-		-- Apply matrix transformation directly
-		local r_new = matrix[1][1] * r + matrix[1][2] * g + matrix[1][3] * b
-		local g_new = matrix[2][1] * r + matrix[2][2] * g + matrix[2][3] * b
-		local b_new = matrix[3][1] * r + matrix[3][2] * g + matrix[3][3] * b
-
-		return clamp(r_new), clamp(g_new), clamp(b_new)
-	else
-		-- Brettel: use fixed matrix and interpolate result
-		matrix = M.brettel_matrices[M.current_type]
-		if not matrix then
-			texio.write_nl("CVD Warning: Unknown deficiency type '" .. tostring(M.current_type) .. "'")
-			return r, g, b
-		end
-
-		-- Apply matrix transformation
-		local r_new = matrix[1][1] * r + matrix[1][2] * g + matrix[1][3] * b
-		local g_new = matrix[2][1] * r + matrix[2][2] * g + matrix[2][3] * b
-		local b_new = matrix[3][1] * r + matrix[3][2] * g + matrix[3][3] * b
-
-		-- Apply severity (interpolate between original and transformed)
-		local severity = M.current_severity
-		r_new = r * (1 - severity) + r_new * severity
-		g_new = g * (1 - severity) + g_new * severity
-		b_new = b * (1 - severity) + b_new * severity
-
-		return clamp(r_new), clamp(g_new), clamp(b_new)
+	-- Get interpolated Machado matrix
+	local matrix = get_machado_matrix(M.current_type, M.current_severity)
+	if not matrix then
+		texio.write_nl("CVD Warning: Unknown deficiency type '" .. tostring(M.current_type) .. "'")
+		return r, g, b
 	end
+
+	-- Apply matrix transformation
+	local r_new = matrix[1][1] * r + matrix[1][2] * g + matrix[1][3] * b
+	local g_new = matrix[2][1] * r + matrix[2][2] * g + matrix[2][3] * b
+	local b_new = matrix[3][1] * r + matrix[3][2] * g + matrix[3][3] * b
+
+	return clamp(r_new), clamp(g_new), clamp(b_new)
 end
 
 -- Set deficiency type
 function M.set_type(deficiency_type)
-	local matrices = M.algorithm == "machado" and M.machado_matrices or M.brettel_matrices
-	if matrices[deficiency_type] then
+	if M.machado_matrices[deficiency_type] then
 		M.current_type = deficiency_type
 		M.enabled = true
 	else
@@ -179,17 +133,7 @@ function M.set_severity(severity)
 	if severity and severity >= 0 and severity <= 1 then
 		M.current_severity = severity
 	else
-		texio.write_nl("CVD Error: Severity must be between 0 and 1")
-	end
-end
-
--- Set algorithm (brettel or machado)
-function M.set_algorithm(algorithm)
-	if algorithm == "brettel" or algorithm == "machado" then
-		M.algorithm = algorithm
-	else
-		texio.write_nl("CVD Error: Unknown algorithm '" .. algorithm .. "'")
-		texio.write_nl("Available algorithms: brettel, machado")
+		tex.error(string.format("Invalid severity '%s'. Must be between 0.0 and 1.0", tostring(severity)))
 	end
 end
 
@@ -313,13 +257,7 @@ function M.get_imagemagick_matrix()
 		return nil
 	end
 	
-	local matrix
-	if M.algorithm == "machado" then
-		matrix = get_machado_matrix(M.current_type, M.current_severity)
-	else
-		matrix = M.brettel_matrices[M.current_type]
-	end
-	
+	local matrix = get_machado_matrix(M.current_type, M.current_severity)
 	if not matrix then
 		return nil
 	end
