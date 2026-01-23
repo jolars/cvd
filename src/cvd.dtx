@@ -7,8 +7,12 @@
 % ------------------------------------------------------------------------- \fi
 % \iffalse
 %<*package>
+\providecommand \IfFormatAtLeastTF { \@ifl@t@r \fmtversion }
+\IfFormatAtLeastTF { 2022-06-01 }
+{ }
+{ \RequirePackage{l3keys2e} }
 \ProvidesExplPackage{cvd}{2026-01-21}{0.1.0}
-  {Color Vision Deficiency Simulation}
+{Color Vision Deficiency Simulation}
 %</package>
 % \fi
 % \CheckSum{0}
@@ -33,15 +37,15 @@
 %
 %    \begin{macrocode}
 \sys_if_engine_luatex:F
-  {
-    \msg_error:nn { cvd } { luatex-required }
-  }
+{
+  \msg_error:nn { cvd } { luatex-required }
+}
 \msg_new:nnn { cvd } { luatex-required }
-  {
-    LuaTeX~required.\\
-    This~package~currently~only~works~with~LuaLaTeX.\\
-    pdfLaTeX~support~is~under~development.
-  }
+{
+  LuaTeX~required.\\
+  This~package~currently~only~works~with~LuaLaTeX.\\
+  pdfLaTeX~support~is~under~development.
+}
 %    \end{macrocode}
 %
 % \subsection{Color Space Enforcement}
@@ -70,14 +74,14 @@
 %
 %    \begin{macrocode}
 \cs_set:Npn \XC@bcolor
+{
+  \directlua
   {
-    \directlua
-      {
-        token.set_macro("current@color",~
-          cvd.transform_current_color("\luaescapestring{\current@color}"),~
-          "global")
-      }
+    token.set_macro("current@color",~
+    cvd.transform_current_color("\luaescapestring{\current@color}"),~
+    "global")
   }
+}
 %    \end{macrocode}
 %
 % \subsection{User Commands}
@@ -88,9 +92,9 @@
 %
 %    \begin{macrocode}
 \NewDocumentCommand \cvdtype { m }
-  {
-    \directlua { cvd.set_type("#1") }
-  }
+{
+  \directlua { cvd.set_type("#1") }
+}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -100,9 +104,9 @@
 %
 %    \begin{macrocode}
 \NewDocumentCommand \cvdseverity { m }
-  {
-    \directlua { cvd.set_severity(#1) }
-  }
+{
+  \directlua { cvd.set_severity(#1) }
+}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -112,9 +116,9 @@
 %
 %    \begin{macrocode}
 \NewDocumentCommand \cvdalgorithm { m }
-  {
-    \directlua { cvd.set_algorithm("#1") }
-  }
+{
+  \directlua { cvd.set_algorithm("#1") }
+}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -124,9 +128,9 @@
 %
 %    \begin{macrocode}
 \NewDocumentCommand \cvdenable { }
-  {
-    \directlua { cvd.enable() }
-  }
+{
+  \directlua { cvd.enable() }
+}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -136,9 +140,9 @@
 %
 %    \begin{macrocode}
 \NewDocumentCommand \cvddisable { }
-  {
-    \directlua { cvd.disable() }
-  }
+{
+  \directlua { cvd.disable() }
+}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -148,46 +152,48 @@
 %    \begin{macrocode}
 \tl_new:N \l__cvd_imgpath_tl
 \NewDocumentCommand \cvdincludegraphics { O{} m }
+{
+  \tl_set:Nx \l__cvd_imgpath_tl
   {
-    \tl_set:Nx \l__cvd_imgpath_tl
-      {
-        \directlua
-          { tex.sprint(cvd.get_image_path("\luaescapestring{#2}")) }
-      }
-    \exp_args:NV \includegraphics [#1] \l__cvd_imgpath_tl
+    \directlua
+    { tex.sprint(cvd.get_image_path("\luaescapestring{#2}")) }
   }
+  \exp_args:NV \includegraphics [#1] \l__cvd_imgpath_tl
+}
 %    \end{macrocode}
 % \end{macro}
 %
-% \subsection{Package Options}
+% \subsection{Package Configuration}
 %
-% Handle package options for deficiency type and severity using \pkg{l3keys}.
-% Since this is a pure expl3 package, we define a user-facing command instead
-% of processing options at load time.
+% Define keys for package configuration using \pkg{l3keys}. Keys are available
+% both as package load-time options and via the \cs{cvdset} command.
 %
 %    \begin{macrocode}
 \keys_define:nn { cvd }
-  {
-    type      .code:n = { \cvdtype{#1} } ,
-    severity  .code:n = { \cvdseverity{#1} } ,
-    algorithm .code:n = { \cvdalgorithm{#1} } ,
-    protanopia   .code:n = { \cvdtype{protanopia} \cvdseverity{1.0} } ,
-    deuteranopia .code:n = { \cvdtype{deuteranopia} \cvdseverity{1.0} } ,
-    tritanopia   .code:n = { \cvdtype{tritanopia} \cvdseverity{1.0} } ,
-    protanomaly  .code:n = { \cvdtype{protanopia} \cvdseverity{0.5} } ,
-    deuteranomaly .code:n = { \cvdtype{deuteranopia} \cvdseverity{0.5} } ,
-    tritanomaly  .code:n = { \cvdtype{tritanopia} \cvdseverity{0.5} } ,
-    brettel      .code:n = { \cvdalgorithm{brettel} } ,
-    machado      .code:n = { \cvdalgorithm{machado} } ,
-    unknown      .code:n = 
-      { \msg_warning:nnx { cvd } { unknown-option } { \l_keys_key_str } }
-  }
+{
+  type          .code:n = {\cvdtype{#1}},
+  severity      .code:n = {\cvdseverity{#1}},
+  algorithm     .code:n = {\cvdalgorithm{#1}},
+  protanopia    .code:n = {\cvdtype{protanopia}\cvdseverity{1.0}},
+  deuteranopia  .code:n = {\cvdtype{deuteranopia}\cvdseverity{1.0}},
+  tritanopia    .code:n = {\cvdtype{tritanopia}\cvdseverity{1.0}},
+  protanomaly   .code:n = {\cvdtype{protanopia}\cvdseverity{0.5}},
+  deuteranomaly .code:n = {\cvdtype{deuteranopia}\cvdseverity{0.5}},
+  tritanomaly   .code:n = {\cvdtype{tritanopia}\cvdseverity{0.5}},
+  brettel       .code:n = {\cvdalgorithm{brettel}},
+  machado       .code:n = {\cvdalgorithm{machado}},
+  unknown       .code:n =
+    { \msg_warning:nnx { cvd } { unknown-option } { \l_keys_key_str } }
+}
 \msg_new:nnn { cvd } { unknown-option }
-  { Unknown~option~'#1'. }
+{ Unknown~option~'#1'. }
 \NewDocumentCommand \cvdset { m }
-  {
-    \keys_set:nn { cvd } { #1 }
-  }
+{
+  \keys_set:nn { cvd } { #1 }
+}
+\IfFormatAtLeastTF { 2022-06-01 }
+{ \ProcessKeyOptions [ cvd ] }
+{ \ProcessKeysOptions { cvd } }
 %    \end{macrocode}
 %
 % \iffalse
