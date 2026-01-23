@@ -53,9 +53,10 @@
 % Load the Lua module that implements the CVD transformations.
 % The \texttt{install\_pdf\_image\_hook()} function registers a callback
 % that transforms colors in embedded PDF pages (vector graphics only).
+% We also load the Lua File System module for file timestamp checking.
 %
 %    \begin{macrocode}
-\directlua{cvd = require("cvd"); cvd.install_pdf_image_hook()}
+\directlua{lfs = require("lfs"); cvd = require("cvd"); cvd.install_pdf_image_hook()}
 %    \end{macrocode}
 %
 % \subsection{Hook into xcolor}
@@ -117,6 +118,17 @@
 %    \begin{macrocode}
 \newcommand{\cvddisable}{%
   \directlua{cvd.disable()}%
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\cvdincludegraphics}
+% Include a graphics file with CVD transformation applied to raster images.
+%
+%    \begin{macrocode}
+\newcommand{\cvdincludegraphics}[2][]{%
+  \edef\cvd@imgpath{\directlua{tex.sprint(cvd.get_image_path("\luaescapestring{#2}"))}}%
+  \includegraphics[#1]{\cvd@imgpath}%
 }
 %    \end{macrocode}
 % \end{macro}

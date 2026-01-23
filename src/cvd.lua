@@ -168,8 +168,8 @@ function M.set_type(deficiency_type)
 		M.current_type = deficiency_type
 		M.enabled = true
 	else
-		texio.write_nl("CVD Error: Unknown deficiency type '" .. deficiency_type .. "'")
-		texio.write_nl("Available types: protanopia, deuteranopia, tritanopia")
+		local error_msg = string.format("Unknown CVD type '%s'. Valid types: protanopia, deuteranopia, tritanopia", deficiency_type)
+		tex.error(error_msg)
 	end
 end
 
@@ -262,6 +262,154 @@ function M.install_pdf_image_hook()
 	
 	-- Register the callback using luatexbase for LaTeX compatibility
 	luatexbase.add_to_callback("process_pdf_image_content", M.process_pdf_image_content, "cvd_pdf_transform")
+end
+
+-- Check if ImageMagick is available
+M.imagemagick_available = nil
+M.imagemagick_warning_shown = false
+
+function M.check_imagemagick()
+	if M.imagemagick_available ~= nil then
+		return M.imagemagick_available
+	end
+	
+	-- Check for shell escape
+	local shell_escape = status.shell_escape
+	if shell_escape == 0 then
+		if not M.imagemagick_warning_shown then
+			texio.write_nl("CVD Warning: Shell escape disabled. Raster image transformation unavailable.")
+			texio.write_nl("            Compile with: lualatex --shell-escape")
+			M.imagemagick_warning_shown = true
+		end
+		M.imagemagick_available = false
+		return false
+	end
+	
+	-- Try to run ImageMagick
+	local check_cmd = "magick -version 2>&1 || convert -version 2>&1"
+	local handle = io.popen(check_cmd)
+	if not handle then
+		M.imagemagick_available = false
+		return false
+	end
+	
+	local result = handle:read("*a")
+	handle:close()
+	
+	M.imagemagick_available = (result and result:match("ImageMagick")) ~= nil
+	
+	if not M.imagemagick_available and not M.imagemagick_warning_shown then
+		texio.write_nl("CVD Warning: ImageMagick not found. Raster image transformation unavailable.")
+		texio.write_nl("            Install with: apt install imagemagick (or brew install imagemagick)")
+		M.imagemagick_warning_shown = true
+	end
+	
+	return M.imagemagick_available
+end
+
+-- Get the CVD transformation matrix as ImageMagick format
+function M.get_imagemagick_matrix()
+	if not M.enabled or not M.current_type then
+		return nil
+	end
+	
+	local matrix
+	if M.algorithm == "machado" then
+		matrix = get_machado_matrix(M.current_type, M.current_severity)
+	else
+		matrix = M.brettel_matrices[M.current_type]
+	end
+	
+	if not matrix then
+		return nil
+	end
+	
+	-- ImageMagick color-matrix format: R1,G1,B1,R2,G2,B2,R3,G3,B3
+	return string.format("%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f",
+		matrix[1][1], matrix[1][2], matrix[1][3],
+		matrix[2][1], matrix[2][2], matrix[2][3],
+		matrix[3][1], matrix[3][2], matrix[3][3])
+end
+
+-- Transform a raster image file
+function M.transform_raster_image(input_file, output_file)
+	if not M.check_imagemagick() then
+		return false
+	end
+	
+	local matrix = M.get_imagemagick_matrix()
+	if not matrix then
+		return false
+	end
+	
+	-- Escape filenames for shell
+	local input_esc = input_file:gsub('"', '\\"')
+	local output_esc = output_file:gsub('"', '\\"')
+	
+	-- Try magick command first (IMv7), then convert (IMv6)
+	local cmd = string.format('magick "%s" -color-matrix "%s" "%s" 2>&1 || convert "%s" -color-matrix "%s" "%s" 2>&1',
+		input_esc, matrix, output_esc,
+		input_esc, matrix, output_esc)
+	
+	texio.write_nl("CVD: Transforming " .. input_file .. " -> " .. output_file)
+	
+	local handle = io.popen(cmd)
+	if not handle then
+		return false
+	end
+	
+	local result = handle:read("*a")
+	local success = handle:close()
+	
+	if not success and result and result ~= "" then
+		texio.write_nl("CVD Warning: ImageMagick error: " .. result)
+		return false
+	end
+	
+	return true
+end
+
+-- Get the (possibly transformed) image path for includegraphics
+function M.get_image_path(img_path)
+	-- Check if it's a raster image that needs transformation
+	local ext = img_path:match("%.([^.]+)$") or ""
+	ext = ext:lower()
+	
+	local is_raster = (ext == "png" or ext == "jpg" or ext == "jpeg")
+	
+	if not (is_raster and M.enabled and M.current_type) then
+		return img_path
+	end
+	
+	-- Find the actual file with kpse
+	local full_path = kpse.find_file(img_path)
+	if not full_path then
+		full_path = img_path
+	end
+	
+	-- Generate transformed filename with severity
+	local base = img_path:match("(.+)%.[^.]+$") or img_path
+	local severity_str = string.format("%.1f", M.current_severity)
+	local transformed = base .. "-cvd-" .. M.current_type .. "-" .. severity_str .. "." .. ext
+	
+	-- Check if we need to transform (file doesn't exist or is older)
+	local need_transform = true
+	local orig_stat = lfs.attributes(full_path)
+	local trans_stat = lfs.attributes(transformed)
+	
+	if trans_stat and orig_stat then
+		need_transform = trans_stat.modification < orig_stat.modification
+	end
+	
+	if need_transform then
+		if M.transform_raster_image(full_path, transformed) then
+			return transformed
+		else
+			return img_path
+		end
+	else
+		return transformed
+	end
 end
 
 return M
