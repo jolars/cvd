@@ -10,7 +10,7 @@ SEVERITY="$2"
 INPUT="$3"
 OUTPUT="$4"
 
-if [ -z "$INPUT" ] || [ -z "$OUTPUT" ] || [ -z "$CVD_TYPE" ]; then
+if [ -z "$INPUT" ] || [ -z "$OUTPUT" ] || [ -z "$CVD_TYPE" ] || [ -z "$SEVERITY" ]; then
     echo "Usage: $0 <type> <severity> <input> <output>"
     echo "  type: protanopia, deuteranopia, or tritanopia"
     echo "  severity: 0.0 to 1.0 (1.0 = full simulation)"
@@ -18,23 +18,41 @@ if [ -z "$INPUT" ] || [ -z "$OUTPUT" ] || [ -z "$CVD_TYPE" ]; then
     exit 1
 fi
 
-# Machado matrices for severity 1.0 (full dichromacy)
-case "$CVD_TYPE" in
-    protanopia)
-        MATRIX="0.152286,0.114503,-0.003882,0.114503,0.786281,-0.048116,-0.003882,-0.048116,1.051998"
-        ;;
-    deuteranopia)
-        MATRIX="0.367322,0.860646,-0.227968,0.280085,0.672501,0.047413,-0.011820,0.042940,0.968881"
-        ;;
-    tritanopia)
-        MATRIX="1.255528,-0.076749,-0.178779,-0.078411,0.930809,0.147602,0.004733,0.691367,0.303900"
-        ;;
-    *)
-        echo "Error: Unknown CVD type '$CVD_TYPE'"
-        echo "Valid types: protanopia, deuteranopia, tritanopia"
-        exit 1
-        ;;
-esac
+# Check if texlua is available
+if ! command -v texlua &> /dev/null; then
+    echo "Error: texlua not found. Please install TeX Live or MiKTeX."
+    exit 1
+fi
+
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Compute interpolated Machado matrix using texlua
+# Create a temporary Lua script
+TEMP_LUA=$(mktemp /tmp/cvd-matrix.XXXXXX.lua)
+trap "rm -f $TEMP_LUA" EXIT
+
+cat > "$TEMP_LUA" << EOF
+package.path = package.path .. ";$SCRIPT_DIR/src/?.lua"
+local cvd = require('cvd')
+local matrix_str = cvd.get_machado_matrix_for_imagemagick('$CVD_TYPE', $SEVERITY)
+if matrix_str then
+    print(matrix_str)
+else
+    io.stderr:write('Error: Unknown CVD type "$CVD_TYPE"\\n')
+    os.exit(1)
+end
+EOF
+
+MATRIX=$(texlua "$TEMP_LUA" 2>&1)
+
+# Check if matrix computation was successful
+if [ $? -ne 0 ] || [ -z "$MATRIX" ]; then
+    echo "Error: Failed to compute transformation matrix"
+    echo "$MATRIX"
+    echo "Valid types: protanopia, deuteranopia, tritanopia"
+    exit 1
+fi
 
 # Check if ImageMagick is available
 if ! command -v convert &> /dev/null && ! command -v magick &> /dev/null; then

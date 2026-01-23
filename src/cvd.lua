@@ -428,4 +428,23 @@ function M.get_image_path(img_path)
 	end
 end
 
+-- Get interpolated Machado matrix formatted for ImageMagick
+-- Returns a comma-separated string suitable for ImageMagick's -color-matrix
+function M.get_machado_matrix_for_imagemagick(cvd_type, severity)
+	local matrix = get_machado_matrix(cvd_type, severity)
+	if not matrix then
+		return nil
+	end
+	
+	-- Format as comma-separated row-major order
+	local parts = {}
+	for i = 1, 3 do
+		for j = 1, 3 do
+			table.insert(parts, string.format("%.6f", matrix[i][j]))
+		end
+	end
+	
+	return table.concat(parts, ",")
+end
+
 return M

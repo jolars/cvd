@@ -7,12 +7,8 @@
 % ------------------------------------------------------------------------- \fi
 % \iffalse
 %<*package>
-\providecommand \IfFormatAtLeastTF { \@ifl@t@r \fmtversion }
-\IfFormatAtLeastTF { 2022-06-01 }
-{ }
-{ \RequirePackage{l3keys2e} }
-\ProvidesExplPackage{cvd}{2026-01-21}{0.1.0}
-{Color Vision Deficiency Simulation}
+\NeedsTeXFormat{LaTeX2e}[2022-06-01]
+\ProvidesExplPackage{cvd}{2026-01-21}{0.1.0}{Color Vision Deficiency Simulation}
 %</package>
 % \fi
 % \CheckSum{0}
@@ -191,9 +187,7 @@
 {
   \keys_set:nn { cvd } { #1 }
 }
-\IfFormatAtLeastTF { 2022-06-01 }
-{ \ProcessKeyOptions [ cvd ] }
-{ \ProcessKeysOptions { cvd } }
+\ProcessKeyOptions [ cvd ]
 %    \end{macrocode}
 %
 % \iffalse
