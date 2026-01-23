@@ -1,5 +1,4 @@
+\input{regression-test.tex}
 \documentclass{minimal}
 
 \usepackage{cvd}
-
-\input{molochexample}
