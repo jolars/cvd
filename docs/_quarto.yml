@@ -19,10 +19,6 @@ book:
   image: images/og.jpg
   author:
     - name: "Johan Larsson"
-    - name: "Matthias Vogelgesang"
-      note:
-        "Matthias wrote the original version of this manual for the Metropolis
-        theme."
   date: today
 
   repo-url: "https://github.com/jolars/cvd"
