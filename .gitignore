@@ -302,7 +302,7 @@ TSWLatexianTemp*
 
 # Ignore sty files generated from dtx
 *.sty
-doc/moloch.pdf
+doc/cvd.pdf
 build/
 .latex-cache
 *-ctan.zip
