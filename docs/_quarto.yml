@@ -1,0 +1,114 @@
+project:
+  type: book
+  output-dir: _site
+
+book:
+  title: "CVD"
+  subtitle: "A LaTeX Package for Simulating Color Vision Deficiency"
+  description: |
+    A LaTeX package for simulating color vision deficiency
+
+  output-file: moloch
+  open-graph:
+    title: "Moloch - A Minimalist, Feature-Rich Beamer Theme"
+    locale: en_US
+    image: images/og.jpg
+  twitter-card:
+    image: images/og.jpg
+  favicon: favicon.svg
+  image: images/og.jpg
+  author:
+    - name: "Johan Larsson"
+    - name: "Matthias Vogelgesang"
+      note:
+        "Matthias wrote the original version of this manual for the Metropolis
+        theme."
+  date: today
+
+  repo-url: "https://github.com/jolars/cvd"
+  site-url: "https://jolars.github.io/cvd/"
+  repo-branch: main
+
+  search: true
+
+  page-footer:
+    left: "CVD v{{< meta version >}} | Copyright 2024-2025, Johan Larsson"
+    right:
+      - icon: github
+        href: "https://github.com/jolars/cvd"
+        aria-label: "Source for this webpage"
+  chapters:
+    - index.md
+    - part: User Guide
+      chapters:
+        - getting-started.md
+  appendices:
+    - part: Implementation
+      chapters:
+        - implementation/cvd.md
+
+highlight-style: breeze
+
+format:
+  html:
+    toc: true
+    theme:
+      light: flatly
+      dark: darkly
+    highlight-style: github
+    css: styles.css
+    html-math-method: katex
+    include-in-header:
+      file: header.html
+  pdf:
+    documentclass: scrreprt
+    classoption: toc=graduated
+    toc: true
+    number-sections: true
+    colorlinks: true
+    include-in-header:
+      text: |
+        \usepackage{xspace}
+        \usepackage{parskip}
+        \usepackage{doc}
+        \usepackage{xcolor}
+        \usepackage{makeidx}
+        \makeindex
+        \definecolor{JungleGreen}{RGB}{42,127,98}
+        \newenvironment{DescribeOption}[3]{
+          \begin{minipage}[t]{\textwidth}
+            \texttt{#1}
+            \textit{\textbf{\textcolor{JungleGreen}{#2}}}\dotfill\,#3\par
+            \begingroup
+            \vspace{0.5em}
+        }{
+            \par
+            \endgroup
+          \end{minipage}
+        }
+        \newenvironment{DescribeKey}[3]{
+          \begin{minipage}[t]{\textwidth}
+            \texttt{#1}
+            \textit{\textbf{\textcolor{JungleGreen}{#2}}}%
+            \ifx&#3&\else\dotfill\,default: #3\fi\par
+            \begingroup
+            \vspace{0.5em}
+        }{
+            \par
+            \endgroup
+          \end{minipage}
+        }
+    include-after-body:
+      text: |
+        \printindex
+
+execute:
+  freeze: auto
+
+toc: true
+date-format: "D MMMM YYYY"
+
+filters:
+  - filters/pre-render.lua
+  - filters/describe-option.lua
+  - filters/describe-key.lua

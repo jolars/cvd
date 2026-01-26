@@ -6,15 +6,32 @@ tasks:
     cmds:
       - l3build install
 
-  docs:
-    desc: Build the package documentation
-    cmds:
-      - l3build-wrapped doc
-
   extract-dtx-docs:
     desc: Extract and convert DTX documentation to Markdown
     cmds:
       - texlua scripts/extract-dtx-docs.lua
+
+  docs:
+    desc: Build the documentation site (Quarto)
+    dir: docs
+    deps:
+      - extract-dtx-docs
+    cmds:
+      - quarto render
+
+  docs-preview:
+    desc: Preview the generated documentation in a web browser
+    dir: docs
+    cmds:
+      - quarto preview
+
+  build-manual:
+    desc: Build the PDF manual
+    deps:
+      - extract-dtx-docs
+      - generate-example-images
+    cmds:
+      - cd docs && quarto render --to pdf
 
   test:
     desc: Run the test suite, checking package functionality
