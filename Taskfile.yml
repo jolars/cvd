@@ -40,3 +40,17 @@ tasks:
       - images/logo.pdf
       - images/logo.png
       - images/logo.svg
+
+  opengraph:
+    desc: Build OpenGraph image (1200x630 PNG)
+    deps:
+      - logo
+    dir: images
+    cmds:
+      - lualatex og.tex
+      - pdftocairo -png -singlefile -r 150 og.pdf og
+    sources:
+      - images/og.tex
+    generates:
+      - images/og.pdf
+      - images/og.png
