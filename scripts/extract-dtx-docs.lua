@@ -177,7 +177,7 @@ return {{CodeBlock = CodeBlock}}
 				outfile:write(
 					"**Source file:** [`src/"
 						.. basename
-						.. ".dtx`](https://github.com/jolars/moloch/blob/main/src/"
+						.. ".dtx`](https://github.com/jolars/cvd/blob/main/src/"
 						.. basename
 						.. ".dtx)\n\n"
 				)

@@ -4,7 +4,7 @@ title: "Main"
 
 ::: {.callout-note}
 
-**Source file:** [`src/cvd.dtx`](https://github.com/jolars/moloch/blob/main/src/cvd.dtx)
+**Source file:** [`src/cvd.dtx`](https://github.com/jolars/cvd/blob/main/src/cvd.dtx)
 
 :::
 

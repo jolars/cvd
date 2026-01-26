@@ -3,19 +3,19 @@ project:
   output-dir: _site
 
 book:
-  title: "CVD"
+  title: "cvd"
   subtitle: "A LaTeX Package for Simulating Color Vision Deficiency"
   description: |
     A LaTeX package for simulating color vision deficiency
 
-  output-file: moloch
+  output-file: cvd
   open-graph:
-    title: "Moloch - A Minimalist, Feature-Rich Beamer Theme"
+    title: "cvd - A LaTeX Package for Simulating Color Vision Deficiency"
     locale: en_US
     image: images/og.jpg
   twitter-card:
     image: images/og.jpg
-  favicon: favicon.svg
+  favicon: images/logo.svg
   image: images/og.jpg
   author:
     - name: "Johan Larsson"
