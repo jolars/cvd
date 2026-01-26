@@ -18,8 +18,6 @@ tasks:
 
   test:
     desc: Run the test suite, checking package functionality
-    deps:
-      - generate-example-images
     cmds:
       - l3build-wrapped check
 
