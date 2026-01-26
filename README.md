@@ -1,13 +1,12 @@
-# CVD <a href="https://jolars.github.io/cvd"><img src="https://github.com/jolars/cvd/raw/main/images/logo.png" align="right" width="140" /></a>
+# cvd <a href="https://jolars.github.io/cvd"><img src="https://github.com/jolars/cvd/raw/main/images/logo.png" align="right" width="140" /></a>
 
-CVD is a LaTeX package for simulating color vision deficiencies (color
-blindness).
+cvd is a LaTeX package for simulating color vision deficiency.
 
 ## Installation
 
-cvd is not yet on CTAN, so you need to install it from source. Assuming you have
-[l3build](https://https://github.com/latex3/l3build) installed as well as an
-up-to-date LaTeX distribution, you can install cvd by running:
+The package is not yet on CTAN, so you need to install it from source. Assuming
+you have [l3build](https://https://github.com/latex3/l3build) installed as well
+as an up-to-date LaTeX distribution, you can install cvd by running:
 
 ```bash
 git clone https://github.com/jolars/cvd.git
@@ -17,7 +16,7 @@ l3build install
 
 ## Usage
 
-CVD requires LuaTeX to work and currently supports
+cvd requires LuaTeX to work and currently supports
 
 - any colors defined with `\textcolor`, `\colorbox`, `\fcolorbox`, etc.
 - PDF images included with `\includegraphics`
