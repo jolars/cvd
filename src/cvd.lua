@@ -165,37 +165,111 @@ function M.transform_current_color(color_str)
 end
 
 -- Transform RGB color operators in PDF page content streams
+-- NOTE: This function modifies the uncompressed PDF stream content. Due to limitations
+-- in LuaTeX's process_pdf_image_content callback, the stream length may not always be
+-- correctly updated, which can cause truncation if the stream grows significantly.
+-- To mitigate this, we:
+-- 1. Preserve original number format when colors don't change
+-- 2. Use minimal precision (4 decimal places) and strip trailing zeros
+-- 3. Warn if stream grows by more than 100 bytes
+-- For PDFs with many color transformations, consider using \cvdincludegraphics with
+-- raster image formats (PNG/JPG) instead, which are processed externally.
 function M.process_pdf_image_content(stream)
 	if not M.enabled or not M.current_type then
 		return stream
 	end
 
+	local original_length = #stream
+
+	-- Helper function to format numbers with minimal digits
+	local function format_short(v)
+		local s = string.format("%.4f", v)
+		s = s:gsub("0+$", ""):gsub("%.$", "")
+		return s
+	end
+
 	-- Transform RGB fill colors (rg operator)
-	stream = string.gsub(stream, "([%d.]+) +([%d.]+) +([%d.]+) +rg", function(r, g, b)
+	-- Match at line start, require non-letter after operator to avoid matching 'rg' in words
+	stream = string.gsub(stream, "\n([%d.]+)%s+([%d.]+)%s+([%d.]+)%s+rg([^a-zA-Z])", function(r, g, b, term)
+		local r_str, g_str, b_str = r, g, b
 		r, g, b = tonumber(r), tonumber(g), tonumber(b)
-		local r_new, g_new, b_new = M.transform(r, g, b)
-		return string.format("%.6f %.6f %.6f rg", r_new, g_new, b_new)
+		if r and g and b and r >= 0 and r <= 1 and g >= 0 and g <= 1 and b >= 0 and b <= 1 then
+			local r_new, g_new, b_new = M.transform(r, g, b)
+			-- Keep original format if values haven't changed significantly
+			if math.abs(r_new - r) < 0.000001 and math.abs(g_new - g) < 0.000001 and math.abs(b_new - b) < 0.000001 then
+				return "\n" .. r_str .. " " .. g_str .. " " .. b_str .. " rg" .. term
+			end
+			-- Use shortest possible format: strip trailing zeros and decimal point if integer
+			return string.format("\n%s %s %s rg%s", format_short(r_new), format_short(g_new), format_short(b_new), term)
+		end
+		return "\n" .. r_str .. " " .. g_str .. " " .. b_str .. " rg" .. term
 	end)
 
 	-- Transform RGB stroke colors (RG operator)
-	stream = string.gsub(stream, "([%d.]+) +([%d.]+) +([%d.]+) +RG", function(r, g, b)
+	stream = string.gsub(stream, "\n([%d.]+)%s+([%d.]+)%s+([%d.]+)%s+RG([^a-zA-Z])", function(r, g, b, term)
+		local r_str, g_str, b_str = r, g, b
 		r, g, b = tonumber(r), tonumber(g), tonumber(b)
-		local r_new, g_new, b_new = M.transform(r, g, b)
-		return string.format("%.6f %.6f %.6f RG", r_new, g_new, b_new)
+		if r and g and b and r >= 0 and r <= 1 and g >= 0 and g <= 1 and b >= 0 and b <= 1 then
+			local r_new, g_new, b_new = M.transform(r, g, b)
+			if math.abs(r_new - r) < 0.000001 and math.abs(g_new - g) < 0.000001 and math.abs(b_new - b) < 0.000001 then
+				return "\n" .. r_str .. " " .. g_str .. " " .. b_str .. " RG" .. term
+			end
+			return string.format("\n%s %s %s RG%s", format_short(r_new), format_short(g_new), format_short(b_new), term)
+		end
+		return "\n" .. r_str .. " " .. g_str .. " " .. b_str .. " RG" .. term
 	end)
 
 	-- Transform RGB colors in scn/SCN operators (used with /DeviceRGB color space)
-	stream = string.gsub(stream, "([%d.]+) +([%d.]+) +([%d.]+) +scn", function(r, g, b)
+	stream = string.gsub(stream, "\n([%d.]+)%s+([%d.]+)%s+([%d.]+)%s+scn([^a-zA-Z])", function(r, g, b, term)
+		local r_str, g_str, b_str = r, g, b
 		r, g, b = tonumber(r), tonumber(g), tonumber(b)
-		local r_new, g_new, b_new = M.transform(r, g, b)
-		return string.format("%.6f %.6f %.6f scn", r_new, g_new, b_new)
+		if r and g and b and r >= 0 and r <= 1 and g >= 0 and g <= 1 and b >= 0 and b <= 1 then
+			local r_new, g_new, b_new = M.transform(r, g, b)
+			if math.abs(r_new - r) < 0.000001 and math.abs(g_new - g) < 0.000001 and math.abs(b_new - b) < 0.000001 then
+				return "\n" .. r_str .. " " .. g_str .. " " .. b_str .. " scn" .. term
+			end
+			return string.format(
+				"\n%s %s %s scn%s",
+				format_short(r_new),
+				format_short(g_new),
+				format_short(b_new),
+				term
+			)
+		end
+		return "\n" .. r_str .. " " .. g_str .. " " .. b_str .. " scn" .. term
 	end)
 
-	stream = string.gsub(stream, "([%d.]+) +([%d.]+) +([%d.]+) +SCN", function(r, g, b)
+	stream = string.gsub(stream, "\n([%d.]+)%s+([%d.]+)%s+([%d.]+)%s+SCN([^a-zA-Z])", function(r, g, b, term)
+		local r_str, g_str, b_str = r, g, b
 		r, g, b = tonumber(r), tonumber(g), tonumber(b)
-		local r_new, g_new, b_new = M.transform(r, g, b)
-		return string.format("%.6f %.6f %.6f SCN", r_new, g_new, b_new)
+		if r and g and b and r >= 0 and r <= 1 and g >= 0 and g <= 1 and b >= 0 and b <= 1 then
+			local r_new, g_new, b_new = M.transform(r, g, b)
+			if math.abs(r_new - r) < 0.000001 and math.abs(g_new - g) < 0.000001 and math.abs(b_new - b) < 0.000001 then
+				return "\n" .. r_str .. " " .. g_str .. " " .. b_str .. " SCN" .. term
+			end
+			return string.format(
+				"\n%s %s %s SCN%s",
+				format_short(r_new),
+				format_short(g_new),
+				format_short(b_new),
+				term
+			)
+		end
+		return "\n" .. r_str .. " " .. g_str .. " " .. b_str .. " SCN" .. term
 	end)
+
+	local new_length = #stream
+	local growth = new_length - original_length
+
+	-- Warn if stream grew significantly (may cause issues with some PDF readers)
+	if growth > 100 then
+		texio.write_nl(
+			string.format(
+				"CVD Warning: PDF stream grew by %d bytes. This may cause rendering issues in some viewers.",
+				growth
+			)
+		)
+	end
 
 	return stream
 end
