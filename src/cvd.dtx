@@ -142,7 +142,7 @@
     \directlua
     { tex.sprint(cvd.get_image_path("\luaescapestring{#2}")) }
   }
-  \exp_args:NV \includegraphics [#1] \l__cvd_imgpath_tl
+  \exp_args:No \includegraphics [#1] { \l__cvd_imgpath_tl }
 }
 %    \end{macrocode}
 % \end{macro}
