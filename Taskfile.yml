@@ -29,3 +29,16 @@ tasks:
       - build-manual
     cmds:
       - l3build-wrapped ctan
+
+  logo:
+    desc: Build logo in multiple formats (PDF, PNG, SVG)
+    dir: images
+    cmds:
+      - lualatex logo.tex
+      - pdftocairo -png -singlefile -r 600 -transp logo.pdf logo
+    sources:
+      - images/logo.tex
+    generates:
+      - images/logo.pdf
+      - images/logo.png
+      - images/logo.svg

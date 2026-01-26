@@ -1,4 +1,4 @@
-# CVD
+# CVD <a href="https://jolars.github.io/cvd"><img src="https://github.com/jolars/cvd/raw/main/images/logo.png" align="right" width="140" /></a>
 
 CVD is a LaTeX package for simulating color vision deficiencies (color
 blindness).

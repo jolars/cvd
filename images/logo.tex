@@ -1,0 +1,55 @@
+% !TeX program = lualatex
+\documentclass[tikz]{standalone}
+\usepackage{xcolor}
+\usepackage{cvd}
+
+\usepackage[default]{fontsetup}
+
+\newcommand{\colorfultext}{%
+  \node[scale=2.1, anchor=center] at (2, 4) {\textcolor{red}{\textbf{\LaTeX}}};
+  \node[scale=2.1, anchor=center] at (2, 3) {\textcolor{green}{\textbf{\LaTeX}}};
+  \node[scale=2.1, anchor=center] at (2, 2) {\textcolor{red}{\textbf{\LaTeX}}};
+  \node[scale=2.1, anchor=center] at (2, 1) {\textcolor{green}{\textbf{\LaTeX}}};
+}
+
+\begin{document}
+
+\begin{tikzpicture}
+  \draw[color=gray!80!white,line width=2pt, fill=white] (0,0) rectangle (4,5);
+
+  % Add colorful LaTeX text in rows (NORMAL VERSION)
+  \colorfultext
+
+  % Draw the CVD-simulated version, clipped to lens circles
+  \begin{scope}
+    % Clip to the two lens circles
+    \clip (1.0, 3.5) circle (0.8) (3.0, 3.5) circle (0.8);
+
+    \cvdtype{deuteranopia}
+    \cvdseverity{1.0}
+
+    % Redraw the same text with CVD enabled
+    \colorfultext
+
+    \cvddisable
+  \end{scope}
+
+  % Eyeglasses
+
+  % Left lens circle
+  \draw[line width=2pt] (1.0, 3.5) circle (0.8);
+
+  % Right lens circle
+  \draw[line width=2pt] (3.0, 3.5) circle (0.8);
+
+  % Bridge
+  \draw[line width=2pt] (1.8, 3.5) -- (2.2, 3.5);
+
+  % Left temple
+  \draw[line width=2pt] (0.2, 3.5) -- (-0.4, 3.6);
+
+  % Right temple
+  \draw[line width=2pt] (3.8, 3.5) -- (4.4, 3.6);
+\end{tikzpicture}
+
+\end{document}
