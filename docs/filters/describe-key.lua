@@ -18,8 +18,13 @@ function Div(el)
 		if FORMAT:match("latex") then
 			-- Build the LaTeX environment with content
 			local result = {}
-			table.insert(result, pandoc.RawBlock("latex", 
-				string.format("\\begin{DescribeKey}{%s}{%s}{%s}", key_name, type_val, default or "")))
+			table.insert(
+				result,
+				pandoc.RawBlock(
+					"latex",
+					string.format("\\begin{DescribeKey}{%s}{%s}{%s}", key_name, type_val, default or "")
+				)
+			)
 			for _, block in ipairs(el.content) do
 				table.insert(result, block)
 			end
@@ -46,7 +51,10 @@ function Div(el)
 				table.insert(header, pandoc.Space())
 				table.insert(header, pandoc.Str("—"))
 				table.insert(header, pandoc.Space())
-				table.insert(header, pandoc.Span(pandoc.Str("default: " .. default), pandoc.Attr("", { "key-default" })))
+				table.insert(
+					header,
+					pandoc.Span(pandoc.Str("default: " .. default), pandoc.Attr("", { "key-default" }))
+				)
 			end
 
 			-- Prepend header to content

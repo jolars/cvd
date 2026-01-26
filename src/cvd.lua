@@ -122,7 +122,8 @@ function M.set_type(deficiency_type)
 		M.current_type = deficiency_type
 		M.enabled = true
 	else
-		local error_msg = string.format("Unknown CVD type '%s'. Valid types: protanopia, deuteranopia, tritanopia", deficiency_type)
+		local error_msg =
+			string.format("Unknown CVD type '%s'. Valid types: protanopia, deuteranopia, tritanopia", deficiency_type)
 		tex.error(error_msg)
 	end
 end
@@ -168,34 +169,34 @@ function M.process_pdf_image_content(stream)
 	if not M.enabled or not M.current_type then
 		return stream
 	end
-	
+
 	-- Transform RGB fill colors (rg operator)
 	stream = string.gsub(stream, "([%d.]+) +([%d.]+) +([%d.]+) +rg", function(r, g, b)
 		r, g, b = tonumber(r), tonumber(g), tonumber(b)
 		local r_new, g_new, b_new = M.transform(r, g, b)
 		return string.format("%.6f %.6f %.6f rg", r_new, g_new, b_new)
 	end)
-	
+
 	-- Transform RGB stroke colors (RG operator)
 	stream = string.gsub(stream, "([%d.]+) +([%d.]+) +([%d.]+) +RG", function(r, g, b)
 		r, g, b = tonumber(r), tonumber(g), tonumber(b)
 		local r_new, g_new, b_new = M.transform(r, g, b)
 		return string.format("%.6f %.6f %.6f RG", r_new, g_new, b_new)
 	end)
-	
+
 	-- Transform RGB colors in scn/SCN operators (used with /DeviceRGB color space)
 	stream = string.gsub(stream, "([%d.]+) +([%d.]+) +([%d.]+) +scn", function(r, g, b)
 		r, g, b = tonumber(r), tonumber(g), tonumber(b)
 		local r_new, g_new, b_new = M.transform(r, g, b)
 		return string.format("%.6f %.6f %.6f scn", r_new, g_new, b_new)
 	end)
-	
+
 	stream = string.gsub(stream, "([%d.]+) +([%d.]+) +([%d.]+) +SCN", function(r, g, b)
 		r, g, b = tonumber(r), tonumber(g), tonumber(b)
 		local r_new, g_new, b_new = M.transform(r, g, b)
 		return string.format("%.6f %.6f %.6f SCN", r_new, g_new, b_new)
 	end)
-	
+
 	return stream
 end
 
@@ -203,7 +204,7 @@ end
 function M.install_pdf_image_hook()
 	-- Enable PDF stream recompression (required for the callback to work)
 	pdf.setrecompress(1)
-	
+
 	-- Register the callback using luatexbase for LaTeX compatibility
 	luatexbase.add_to_callback("process_pdf_image_content", M.process_pdf_image_content, "cvd_pdf_transform")
 end
@@ -216,7 +217,7 @@ function M.check_imagemagick()
 	if M.imagemagick_available ~= nil then
 		return M.imagemagick_available
 	end
-	
+
 	-- Check for shell escape
 	local shell_escape = status.shell_escape
 	if shell_escape == 0 then
@@ -228,7 +229,7 @@ function M.check_imagemagick()
 		M.imagemagick_available = false
 		return false
 	end
-	
+
 	-- Try to run ImageMagick
 	local check_cmd = "magick -version 2>&1 || convert -version 2>&1"
 	local handle = io.popen(check_cmd)
@@ -236,18 +237,18 @@ function M.check_imagemagick()
 		M.imagemagick_available = false
 		return false
 	end
-	
+
 	local result = handle:read("*a")
 	handle:close()
-	
+
 	M.imagemagick_available = (result and result:match("ImageMagick")) ~= nil
-	
+
 	if not M.imagemagick_available and not M.imagemagick_warning_shown then
 		texio.write_nl("CVD Warning: ImageMagick not found. Raster image transformation unavailable.")
 		texio.write_nl("            Install with: apt install imagemagick (or brew install imagemagick)")
 		M.imagemagick_warning_shown = true
 	end
-	
+
 	return M.imagemagick_available
 end
 
@@ -256,17 +257,25 @@ function M.get_imagemagick_matrix()
 	if not M.enabled or not M.current_type then
 		return nil
 	end
-	
+
 	local matrix = get_machado_matrix(M.current_type, M.current_severity)
 	if not matrix then
 		return nil
 	end
-	
+
 	-- ImageMagick color-matrix format: R1,G1,B1,R2,G2,B2,R3,G3,B3
-	return string.format("%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f",
-		matrix[1][1], matrix[1][2], matrix[1][3],
-		matrix[2][1], matrix[2][2], matrix[2][3],
-		matrix[3][1], matrix[3][2], matrix[3][3])
+	return string.format(
+		"%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f",
+		matrix[1][1],
+		matrix[1][2],
+		matrix[1][3],
+		matrix[2][1],
+		matrix[2][2],
+		matrix[2][3],
+		matrix[3][1],
+		matrix[3][2],
+		matrix[3][3]
+	)
 end
 
 -- Transform a raster image file
@@ -274,36 +283,42 @@ function M.transform_raster_image(input_file, output_file)
 	if not M.check_imagemagick() then
 		return false
 	end
-	
+
 	local matrix = M.get_imagemagick_matrix()
 	if not matrix then
 		return false
 	end
-	
+
 	-- Escape filenames for shell
 	local input_esc = input_file:gsub('"', '\\"')
 	local output_esc = output_file:gsub('"', '\\"')
-	
+
 	-- Try magick command first (IMv7), then convert (IMv6)
-	local cmd = string.format('magick "%s" -color-matrix "%s" "%s" 2>&1 || convert "%s" -color-matrix "%s" "%s" 2>&1',
-		input_esc, matrix, output_esc,
-		input_esc, matrix, output_esc)
-	
+	local cmd = string.format(
+		'magick "%s" -color-matrix "%s" "%s" 2>&1 || convert "%s" -color-matrix "%s" "%s" 2>&1',
+		input_esc,
+		matrix,
+		output_esc,
+		input_esc,
+		matrix,
+		output_esc
+	)
+
 	texio.write_nl("CVD: Transforming " .. input_file .. " -> " .. output_file)
-	
+
 	local handle = io.popen(cmd)
 	if not handle then
 		return false
 	end
-	
+
 	local result = handle:read("*a")
 	local success = handle:close()
-	
+
 	if not success and result and result ~= "" then
 		texio.write_nl("CVD Warning: ImageMagick error: " .. result)
 		return false
 	end
-	
+
 	return true
 end
 
@@ -312,23 +327,23 @@ function M.get_image_path(img_path)
 	-- Check if it's a raster image that needs transformation
 	local ext = img_path:match("%.([^.]+)$") or ""
 	ext = ext:lower()
-	
+
 	local is_raster = (ext == "png" or ext == "jpg" or ext == "jpeg")
-	
+
 	if not (is_raster and M.enabled and M.current_type) then
 		return img_path
 	end
-	
+
 	-- Find the actual file with kpse
 	local full_path = kpse.find_file(img_path)
 	if not full_path then
 		full_path = img_path
 	end
-	
+
 	-- Respect -output-directory if set
 	local output_dir = status.output_directory
 	local base_dir = output_dir or "."
-	
+
 	-- Create cache directory if it doesn't exist
 	local cache_dir = base_dir .. "/.cvd-cache"
 	local cache_stat = lfs.attributes(cache_dir)
@@ -339,22 +354,22 @@ function M.get_image_path(img_path)
 		end
 		lfs.mkdir(cache_dir)
 	end
-	
+
 	-- Generate transformed filename with severity in cache directory
 	local base = img_path:match("([^/\\]+)$") or img_path -- extract just the filename
-	local name_only = base:match("(.+)%.[^.]+$") or base  -- remove extension
+	local name_only = base:match("(.+)%.[^.]+$") or base -- remove extension
 	local severity_str = string.format("%.1f", M.current_severity)
 	local transformed = cache_dir .. "/" .. name_only .. "-cvd-" .. M.current_type .. "-" .. severity_str .. "." .. ext
-	
+
 	-- Check if we need to transform (file doesn't exist or is older)
 	local need_transform = true
 	local orig_stat = lfs.attributes(full_path)
 	local trans_stat = lfs.attributes(transformed)
-	
+
 	if trans_stat and orig_stat then
 		need_transform = trans_stat.modification < orig_stat.modification
 	end
-	
+
 	if need_transform then
 		if M.transform_raster_image(full_path, transformed) then
 			return transformed
@@ -373,7 +388,7 @@ function M.get_machado_matrix_for_imagemagick(cvd_type, severity)
 	if not matrix then
 		return nil
 	end
-	
+
 	-- Format as comma-separated row-major order
 	local parts = {}
 	for i = 1, 3 do
@@ -381,7 +396,7 @@ function M.get_machado_matrix_for_imagemagick(cvd_type, severity)
 			table.insert(parts, string.format("%.6f", matrix[i][j]))
 		end
 	end
-	
+
 	return table.concat(parts, ",")
 end
 

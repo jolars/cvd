@@ -18,8 +18,13 @@ function Div(el)
 		if FORMAT:match("latex") then
 			-- Build the LaTeX environment with content
 			local result = {}
-			table.insert(result, pandoc.RawBlock("latex", 
-				string.format("\\begin{DescribeOption}{%s}{%s}{%s}", option_name, values, default or "")))
+			table.insert(
+				result,
+				pandoc.RawBlock(
+					"latex",
+					string.format("\\begin{DescribeOption}{%s}{%s}{%s}", option_name, values, default or "")
+				)
+			)
 			for _, block in ipairs(el.content) do
 				table.insert(result, block)
 			end
