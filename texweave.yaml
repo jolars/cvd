@@ -1,0 +1,3 @@
+output: docs/implementation
+source: src
+filter: filters/code-classes.lua
