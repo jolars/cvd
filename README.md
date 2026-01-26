@@ -81,7 +81,7 @@ CVD enabled - \textcolor{red}{simulated red} and \textcolor{green}{simulated gre
 \cvdseverity{0.85}
 \cvdtype{protanopia}
 
-cvdincludegraphics{test-image.pdf}
+\cvdincludegraphics{test-image.pdf}
 
 \end{document}
 ```
