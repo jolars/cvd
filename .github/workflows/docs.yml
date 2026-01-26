@@ -45,8 +45,21 @@ jobs:
 
       - uses: leafo/gh-actions-lua@v12
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Install texweave
+        run: pnpm add -g texweave
+
       - name: Extract DTX documentation
-        run: lua scripts/extract-dtx-docs.lua
+        run: texweave extract
 
       - name: Render Quarto Project
         uses: quarto-dev/quarto-actions/render@v2
