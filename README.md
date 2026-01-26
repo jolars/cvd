@@ -88,8 +88,7 @@ cvdincludegraphics{test-image.pdf}
 
 ## Contributing
 
-Contributions are welcome, but we are generally not interested in changes that
-can be easily added through the standard Beamer interface.
+Contributions are welcome!
 
 Also, when writing commit messages, please use the
 [conventional commits format](https://www.conventionalcommits.org/en/v1.0.0/).
