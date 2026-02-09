@@ -188,10 +188,24 @@
 % both as package load-time options and via the \cs{cvdset} command.
 %
 %    \begin{macrocode}
+\bool_new:N \l__cvd_graphics_hook_bool
+\bool_new:N \l__cvd_graphics_convert_bool
+\cs_new_eq:NN \__cvd_orig_includegraphics \includegraphics
+
 \keys_define:nn { cvd }
   {
     type          .code:n = { \cvdtype{#1} } ,
     severity      .code:n = { \cvdseverity{#1} } ,
+    graphics~hook .bool_set:N = \l__cvd_graphics_hook_bool ,
+    graphics~hook .initial:n = true ,
+    graphics~hook .default:n = true ,
+    graphics~hook / true .code:n = { \directlua { cvd.enable_graphics_hook() } } ,
+    graphics~hook / false .code:n = { \directlua { cvd.disable_graphics_hook() } } ,
+    graphics~convert .bool_set:N = \l__cvd_graphics_convert_bool ,
+    graphics~convert .initial:n = false ,
+    graphics~convert .default:n = true ,
+    graphics~convert / true .code:n = { \__cvd_patch_includegraphics: } ,
+    graphics~convert / false .code:n = { \__cvd_unpatch_includegraphics: } ,
     protanopia    .code:n = { \cvdtype{protanopia} \cvdseverity{1.0} } ,
     deuteranopia  .code:n = { \cvdtype{deuteranopia} \cvdseverity{1.0} } ,
     tritanopia    .code:n = { \cvdtype{tritanopia} \cvdseverity{1.0} } ,
@@ -203,6 +217,22 @@
   }
 \msg_new:nnn { cvd } { unknown-option }
   { Unknown~option~'#1'. }
+
+\cs_new:Npn \__cvd_patch_includegraphics:
+{
+  \RenewDocumentCommand \includegraphics { O{} m }
+  {
+    \cvdincludegraphics[##1]{##2}
+  }
+  \directlua { cvd.enable_graphics_convert() }
+}
+
+\cs_new:Npn \__cvd_unpatch_includegraphics:
+{
+  \cs_set_eq:NN \includegraphics \__cvd_orig_includegraphics
+  \directlua { cvd.disable_graphics_convert() }
+}
+
 \NewDocumentCommand \cvdset { m }
 {
   \keys_set:nn { cvd } { #1 }

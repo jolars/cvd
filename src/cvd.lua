@@ -51,6 +51,8 @@ M.machado_matrices = {
 M.current_type = nil
 M.current_severity = 1.0
 M.enabled = false
+M.graphics_hook_enabled = true -- Hook into PDF graphics by default
+M.graphics_convert_enabled = false -- Don't auto-convert raster graphics by default
 
 -- Clamp value to [0,1] range
 local function clamp(value)
@@ -148,6 +150,26 @@ function M.disable()
 	M.enabled = false
 end
 
+-- Enable graphics hook (PDF transformation via callback)
+function M.enable_graphics_hook()
+	M.graphics_hook_enabled = true
+end
+
+-- Disable graphics hook (PDF transformation via callback)
+function M.disable_graphics_hook()
+	M.graphics_hook_enabled = false
+end
+
+-- Enable graphics convert (raster image external conversion)
+function M.enable_graphics_convert()
+	M.graphics_convert_enabled = true
+end
+
+-- Disable graphics convert (raster image external conversion)
+function M.disable_graphics_convert()
+	M.graphics_convert_enabled = false
+end
+
 -- Apply CVD transformation to current color
 function M.transform_current_color(color_str)
 	-- \current@color contains PDF color operators like "1 0 0 rg 1 0 0 RG"
@@ -175,7 +197,7 @@ end
 -- For PDFs with many color transformations, consider using \cvdincludegraphics with
 -- raster image formats (PNG/JPG) instead, which are processed externally.
 function M.process_pdf_image_content(stream)
-	if not M.enabled or not M.current_type then
+	if not M.enabled or not M.current_type or not M.graphics_hook_enabled then
 		return stream
 	end
 
