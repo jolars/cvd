@@ -5,7 +5,7 @@ local M = {}
 
 -- Machado matrices (Machado, Oliveira & Fernandes 2009)
 -- Physiologically accurate, supports severity levels 0.0-1.0
-M.machado_matrices = {
+M.machado_matrices_rgb = {
 	protanopia = {
 		{ { 1.000000, -0.000000, 0.000000 }, { -0.000000, 1.000000, 0.000000 }, { 0.000000, -0.000000, 1.000000 } },
 		{ { 0.911599, 0.056681, 0.031720 }, { 0.020794, 0.986365, -0.007159 }, { -0.000861, 0.000744, 1.000117 } },
@@ -46,6 +46,34 @@ M.machado_matrices = {
 		{ { 1.255528, -0.076749, -0.178779 }, { -0.078411, 0.930809, 0.147602 }, { 0.004733, 0.691367, 0.303900 } },
 	},
 }
+M.machado_matrices_cmy = {
+	protanopia = {
+		{ { 1.000000, 0.000000, -0.000000 }, { -0.000000, 1.000000, -0.000000 }, { 0.000000, 0.000000, 1.000000 } },
+		{ { 0.916672, 0.213620, -0.130292 }, { 0.475033, 0.109426, 0.415541 }, { -0.129617, 0.234059, 0.895558 } },
+		{ { 0.951325, 0.204963, -0.156287 }, { 0.460442, 0.160070, 0.379488 }, { -0.127041, 0.212999, 0.914042 } },
+		{ { 0.983548, 0.205664, -0.189212 }, { 0.465349, 0.174996, 0.359654 }, { -0.130106, 0.201158, 0.928948 } },
+		{ { 1.017021, 0.209303, -0.226325 }, { 0.475408, 0.181963, 0.342629 }, { -0.134994, 0.190973, 0.944022 } },
+		{ { 1.052674, 0.214865, -0.267539 }, { 0.488104, 0.186067, 0.325829 }, { -0.141104, 0.181001, 0.960103 } },
+		{ { 1.091077, 0.222182, -0.313259 }, { 0.502724, 0.188997, 0.308279 }, { -0.148337, 0.170711, 0.977626 } },
+		{ { 1.132762, 0.231361, -0.364123 }, { 0.519076, 0.191520, 0.289404 }, { -0.156760, 0.159808, 0.996952 } },
+		{ { 1.178322, 0.242658, -0.420980 }, { 0.537181, 0.194078, 0.268741 }, { -0.166523, 0.148059, 1.018464 } },
+		{ { 1.228467, 0.256448, -0.484915 }, { 0.557184, 0.196996, 0.245819 }, { -0.177852, 0.135244, 1.042609 } },
+		{ { 1.284075, 0.273240, -0.557316 }, { 0.579334, 0.200561, 0.220105 }, { -0.191050, 0.121113, 1.069937 } },
+	},
+	deuteranopia = {
+		{ { 1.000000, 0.000000, -0.000000 }, { -0.000000, 1.000000, -0.000000 }, { 0.000000, 0.000000, 1.000000 } },
+		{ { 0.880169, 0.204117, -0.084286 }, { 0.440304, 0.144221, 0.415475 }, { -0.119691, 0.235566, 0.884125 } },
+		{ { 0.870938, 0.196801, -0.067739 }, { 0.415775, 0.180892, 0.403333 }, { -0.113607, 0.229506, 0.884101 } },
+		{ { 0.859162, 0.195164, -0.054325 }, { 0.403793, 0.193793, 0.402414 }, { -0.110938, 0.229779, 0.881159 } },
+		{ { 0.847065, 0.194895, -0.041960 }, { 0.394885, 0.201090, 0.404025 }, { -0.109117, 0.231471, 0.877646 } },
+		{ { 0.835053, 0.195183, -0.030236 }, { 0.387271, 0.206187, 0.406542 }, { -0.107661, 0.233666, 0.873995 } },
+		{ { 0.823247, 0.195762, -0.019008 }, { 0.380367, 0.210189, 0.409444 }, { -0.106410, 0.236068, 0.870342 } },
+		{ { 0.811689, 0.196517, -0.008206 }, { 0.373927, 0.213562, 0.412512 }, { -0.105296, 0.238554, 0.866741 } },
+		{ { 0.800394, 0.197391, 0.002215 }, { 0.367822, 0.216535, 0.415642 }, { -0.104282, 0.241067, 0.863215 } },
+		{ { 0.789366, 0.198349, 0.012285 }, { 0.361982, 0.219238, 0.418780 }, { -0.103348, 0.243573, 0.859775 } },
+		{ { 0.778601, 0.199372, 0.022027 }, { 0.356362, 0.221745, 0.421893 }, { -0.102482, 0.246057, 0.856425 } },
+	},
+}
 
 -- Current simulation state
 M.current_type = nil
@@ -66,8 +94,13 @@ local function clamp(value)
 end
 
 -- Get interpolated matrix for Machado algorithm
-local function get_machado_matrix(cvd_type, severity)
-	local matrices = M.machado_matrices[cvd_type]
+local function get_machado_matrix(color_model, cvd_type, severity)
+	local matrices = nil
+	if color_model == "rgb" then
+		matrices = M.machado_matrices_rgb[cvd_type]
+	elseif color_model == "cmy" then
+		matrices = M.machado_matrices_cmy[cvd_type]
+	end
 	if not matrices then
 		return nil
 	end
@@ -97,30 +130,30 @@ local function get_machado_matrix(cvd_type, severity)
 	return result
 end
 
--- Apply CVD transformation matrix to RGB triple
-function M.transform(r, g, b)
+-- Apply CVD transformation matrix to RGB or CMY triple
+function M.transform(color_model, c1, c2, c3)
 	if not M.enabled or M.current_type == nil then
-		return r, g, b
+		return c1, c2, c3
 	end
 
 	-- Get interpolated Machado matrix
-	local matrix = get_machado_matrix(M.current_type, M.current_severity)
+	local matrix = get_machado_matrix(color_model, M.current_type, M.current_severity)
 	if not matrix then
 		texio.write_nl("CVD Warning: Unknown deficiency type '" .. tostring(M.current_type) .. "'")
-		return r, g, b
+		return c1, c2, c3
 	end
 
 	-- Apply matrix transformation
-	local r_new = matrix[1][1] * r + matrix[1][2] * g + matrix[1][3] * b
-	local g_new = matrix[2][1] * r + matrix[2][2] * g + matrix[2][3] * b
-	local b_new = matrix[3][1] * r + matrix[3][2] * g + matrix[3][3] * b
+	local c1_new = matrix[1][1] * c1 + matrix[1][2] * c2 + matrix[1][3] * c3
+	local c2_new = matrix[2][1] * c1 + matrix[2][2] * c2 + matrix[2][3] * c3
+	local c3_new = matrix[3][1] * c1 + matrix[3][2] * c2 + matrix[3][3] * c3
 
-	return clamp(r_new), clamp(g_new), clamp(b_new)
+	return clamp(c1_new), clamp(c2_new), clamp(c3_new)
 end
 
 -- Set deficiency type
 function M.set_type(deficiency_type)
-	if M.machado_matrices[deficiency_type] then
+	if M.machado_matrices_rgb[deficiency_type] then
 		M.current_type = deficiency_type
 		M.enabled = true
 	else
@@ -172,15 +205,28 @@ end
 
 -- Apply CVD transformation to current color
 function M.transform_current_color(color_str)
-	-- \current@color contains PDF color operators like "1 0 0 rg 1 0 0 RG"
-	-- Extract just the RGB values (first 3 numbers)
-	local r, g, b = string.match(color_str, "^([%d.]+) +([%d.]+) +([%d.]+)")
-	if r and g and b and M.enabled and M.current_type then
-		r, g, b = tonumber(r), tonumber(g), tonumber(b)
-		local r_new, g_new, b_new = M.transform(r, g, b)
-		-- Replace the RGB values in the original string
-		local transformed =
-			string.gsub(color_str, "^[%d.]+ +[%d.]+ +[%d.]+", string.format("%.6f %.6f %.6f", r_new, g_new, b_new), 1)
+	-- \current@color contains PDF color operators like
+	-- "1 0 0 rg 1 0 0 RG" in RGB or "1 0 0 0 k 1 0 0 0 K" in CMYK
+	-- Extract just the color model ("rgb" or "cmy") and the corresponding
+	-- channel values R G B or C M Y (denoted c1, c2, c3)
+	local color_model = string.match(color_str, "rg") or string.match(color_str, "k")
+	if color_model == "rg" then
+		color_model = "rgb"
+	elseif color_model == "k" then
+		color_model = "cmy"
+	end
+
+	local c1, c2, c3 = string.match(color_str, "^([%d.]+) +([%d.]+) +([%d.]+)")
+	if c1 and c2 and c3 and M.enabled and M.current_type then
+		c1, c2, c3 = tonumber(c1), tonumber(c2), tonumber(c3)
+		local c1_new, c2_new, c3_new = M.transform(color_model, c1, c2, c3)
+		-- Replace the color (RGB or CMY) values in the original string
+		local transformed = string.gsub(
+			color_str,
+			"^[%d.]+ +[%d.]+ +[%d.]+",
+			string.format("%.6f %.6f %.6f", c1_new, c2_new, c3_new),
+			1
+		)
 		return transformed
 	end
 	return color_str
@@ -354,7 +400,7 @@ function M.get_imagemagick_matrix()
 		return nil
 	end
 
-	local matrix = get_machado_matrix(M.current_type, M.current_severity)
+	local matrix = get_machado_matrix("rgb", M.current_type, M.current_severity)
 	if not matrix then
 		return nil
 	end
@@ -480,7 +526,7 @@ end
 -- Get interpolated Machado matrix formatted for ImageMagick
 -- Returns a comma-separated string suitable for ImageMagick's -color-matrix
 function M.get_machado_matrix_for_imagemagick(cvd_type, severity)
-	local matrix = get_machado_matrix(cvd_type, severity)
+	local matrix = get_machado_matrix("rgb", cvd_type, severity)
 	if not matrix then
 		return nil
 	end
