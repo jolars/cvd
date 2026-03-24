@@ -248,7 +248,7 @@ function M.process_pdf_image_content(stream)
 		local r_str, g_str, b_str = r, g, b
 		r, g, b = tonumber(r), tonumber(g), tonumber(b)
 		if r and g and b and r >= 0 and r <= 1 and g >= 0 and g <= 1 and b >= 0 and b <= 1 then
-			local r_new, g_new, b_new = M.transform(r, g, b)
+			local r_new, g_new, b_new = M.transform("rgb", r, g, b)
 			-- Keep original format if values haven't changed significantly
 			if math.abs(r_new - r) < 0.000001 and math.abs(g_new - g) < 0.000001 and math.abs(b_new - b) < 0.000001 then
 				return "\n" .. r_str .. " " .. g_str .. " " .. b_str .. " rg" .. term
@@ -264,7 +264,7 @@ function M.process_pdf_image_content(stream)
 		local r_str, g_str, b_str = r, g, b
 		r, g, b = tonumber(r), tonumber(g), tonumber(b)
 		if r and g and b and r >= 0 and r <= 1 and g >= 0 and g <= 1 and b >= 0 and b <= 1 then
-			local r_new, g_new, b_new = M.transform(r, g, b)
+			local r_new, g_new, b_new = M.transform("rgb", r, g, b)
 			if math.abs(r_new - r) < 0.000001 and math.abs(g_new - g) < 0.000001 and math.abs(b_new - b) < 0.000001 then
 				return "\n" .. r_str .. " " .. g_str .. " " .. b_str .. " RG" .. term
 			end
@@ -278,7 +278,7 @@ function M.process_pdf_image_content(stream)
 		local r_str, g_str, b_str = r, g, b
 		r, g, b = tonumber(r), tonumber(g), tonumber(b)
 		if r and g and b and r >= 0 and r <= 1 and g >= 0 and g <= 1 and b >= 0 and b <= 1 then
-			local r_new, g_new, b_new = M.transform(r, g, b)
+			local r_new, g_new, b_new = M.transform("rgb", r, g, b)
 			if math.abs(r_new - r) < 0.000001 and math.abs(g_new - g) < 0.000001 and math.abs(b_new - b) < 0.000001 then
 				return "\n" .. r_str .. " " .. g_str .. " " .. b_str .. " scn" .. term
 			end
@@ -297,7 +297,7 @@ function M.process_pdf_image_content(stream)
 		local r_str, g_str, b_str = r, g, b
 		r, g, b = tonumber(r), tonumber(g), tonumber(b)
 		if r and g and b and r >= 0 and r <= 1 and g >= 0 and g <= 1 and b >= 0 and b <= 1 then
-			local r_new, g_new, b_new = M.transform(r, g, b)
+			local r_new, g_new, b_new = M.transform("rgb", r, g, b)
 			if math.abs(r_new - r) < 0.000001 and math.abs(g_new - g) < 0.000001 and math.abs(b_new - b) < 0.000001 then
 				return "\n" .. r_str .. " " .. g_str .. " " .. b_str .. " SCN" .. term
 			end

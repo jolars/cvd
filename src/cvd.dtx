@@ -46,7 +46,7 @@
 %
 % \subsection{Load Lua Module}
 %
-% Next, load the Lua module that implements the CVD transformations. The
+% Load the Lua module that implements the CVD transformations. The
 % \verb|install_pdf_image_hook| function registers a callback that
 % transforms colors in embedded PDF pages (vector graphics only). We
 % also load the Lua File System module for file timestamp checking.
@@ -162,7 +162,7 @@
     local~values~=~"\luaescapestring{\l__cvd_values_tl}"
     local~r,~g,~b~=~values:match("([^,]+),([^,]+),([^,]+)")
     r,~g,~b~=~tonumber(r),~tonumber(g),~tonumber(b)
-    r,~g,~b~=~cvd.transform(r,~g,~b)
+    r,~g,~b~=~cvd.transform("rgb",~r,~g,~b)
     token.set_macro("l__cvd_values_tl",~string.format("\csstring\%.6f,\csstring\%.6f,\csstring\%.6f",~r,~g,~b))
   }
   
