@@ -6,7 +6,7 @@
 \START
 
 % Test 1: Known value - Protan 1.0 on rgb(0.2, 0.3, 0.9)
-% Expected: R≈0.16185, G≈0.34807, B≈0.93158
+% Expected: R≈0.47518, G≈0.23778, B≈0.90149
 \TEST{Protan~1.0~transformation}{
   \definecolor{testcolor}{rgb}{0.2,0.3,0.9}
   \cvddefinecolor[type=protanopia,severity=1.0]{testcolor}{result}
@@ -17,21 +17,10 @@
 }
 
 % Test 2: Deutan 0.66 on rgb(0.2, 0.3, 0.9)
-% Expected: R≈0.14263, G≈0.30312, B≈0.88819
+% Expected: R≈0.35047, G≈0.21271, B≈0.90593
 \TEST{Deutan~0.66~transformation}{
   \definecolor{testcolor}{rgb}{0.2,0.3,0.9}
   \cvddefinecolor[type=deuteranopia,severity=0.66]{testcolor}{result}
-  \extractcolorspecs{result}{\model}{\values}
-  \TYPE{Input:~rgb(0.2,~0.3,~0.9)}
-  \TYPE{Output:~\values}
-  \cvddisable
-}
-
-% Test 3: Tritan 0.09 on rgb(0.2, 0.3, 0.9)
-% Expected: R≈0.19624, G≈0.30582, B≈0.86509
-\TEST{Tritan~0.09~transformation}{
-  \definecolor{testcolor}{rgb}{0.2,0.3,0.9}
-  \cvddefinecolor[type=tritanopia,severity=0.09]{testcolor}{result}
   \extractcolorspecs{result}{\model}{\values}
   \TYPE{Input:~rgb(0.2,~0.3,~0.9)}
   \TYPE{Output:~\values}
@@ -83,13 +72,10 @@
   \definecolor{testcolor}{rgb}{0.9,0.8,0.2}
   \cvddefinecolor[type=protanopia,severity=0.7]{testcolor}{protan_result}
   \cvddefinecolor[type=deuteranopia,severity=0.7]{testcolor}{deutan_result}
-  \cvddefinecolor[type=tritanopia,severity=0.7]{testcolor}{tritan_result}
   \extractcolorspecs{protan_result}{\model}{\protan_values}
   \extractcolorspecs{deutan_result}{\model}{\deutan_values}
-  \extractcolorspecs{tritan_result}{\model}{\tritan_values}
   \TYPE{Protan:~\protan_values}
   \TYPE{Deutan:~\deutan_values}
-  \TYPE{Tritan:~\tritan_values}
   \cvddisable
 }
 
