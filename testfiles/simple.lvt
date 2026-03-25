@@ -27,6 +27,17 @@
   \cvddisable
 }
 
+% Test 3: Tritan 0.09 on rgb(0.2, 0.3, 0.9)
+% Expected: R≈0.33948, G≈0.24869, B≈0.85866
+\TEST{Tritan~0.09~transformation}{
+  \definecolor{testcolor}{rgb}{0.2,0.3,0.9}
+  \cvddefinecolor[type=tritanopia,severity=0.09]{testcolor}{result}
+  \extractcolorspecs{result}{\model}{\values}
+  \TYPE{Input:~rgb(0.2,~0.3,~0.9)}
+  \TYPE{Output:~\values}
+  \cvddisable
+}
+
 % Test 4: Black remains black
 \TEST{Black~remains~black}{
   \definecolor{testcolor}{rgb}{0.0,0.0,0.0}
@@ -72,10 +83,13 @@
   \definecolor{testcolor}{rgb}{0.9,0.8,0.2}
   \cvddefinecolor[type=protanopia,severity=0.7]{testcolor}{protan_result}
   \cvddefinecolor[type=deuteranopia,severity=0.7]{testcolor}{deutan_result}
+  \cvddefinecolor[type=tritanopia,severity=0.7]{testcolor}{tritan_result}
   \extractcolorspecs{protan_result}{\model}{\protan_values}
   \extractcolorspecs{deutan_result}{\model}{\deutan_values}
+  \extractcolorspecs{tritan_result}{\model}{\tritan_values}
   \TYPE{Protan:~\protan_values}
   \TYPE{Deutan:~\deutan_values}
+  \TYPE{Tritan:~\tritan_values}
   \cvddisable
 }
 
