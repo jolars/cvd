@@ -42,15 +42,16 @@ compiling LuaTeX with the `--shell-escape` flag enabled.
 
 \subsection{Basic Colors}
 
-\textcolor{red}{Red text} and \textcolor{green}{green text} and \textcolor{blue}{blue text}.
-
-\textcolor{orange}{Orange}, \textcolor{purple}{purple}, \textcolor{cyan}{cyan}.
+\textcolor{red}{Red text} and \textcolor{green}{green text} and \textcolor{blue}{blue text} and \textcolor{cyan}{cyan text} and \textcolor{magenta}{magenta text} and \textcolor{yellow}{yellow text}.
 
 \subsection{Color Boxes}
 
 \fcolorbox{black}{red}{\color{white} Red Box}
 \fcolorbox{black}{green}{\color{white} Green Box}
 \fcolorbox{black}{blue}{\color{white} Blue Box}
+\fcolorbox{black}{cyan}{\color{white} Cyan Box}
+\fcolorbox{black}{magenta}{\color{white} Magenta Box}
+\fcolorbox{black}{yellow}{\color{white} Yellow Box}
 
 \subsection{Custom RGB Colors}
 
@@ -59,6 +60,14 @@ compiling LuaTeX with the `--shell-escape` flag enabled.
 \definecolor{myblue}{rgb}{0.1, 0.1, 0.8}
 
 \textcolor{myred}{Custom red}, \textcolor{mygreen}{custom green}, \textcolor{myblue}{custom blue}.
+
+\subsection{Custom CMYK Colors}
+
+\definecolor{mycyan}{cmyk}{0.8, 0.1, 0.1, 1}
+\definecolor{mymagenta}{cmyk}{0.1, 0.8, 0.1, 1}
+\definecolor{myyellow}{cmyk}{0.1, 0.1, 0.8, 1}
+
+\textcolor{mycyan}{Custom cyan}, \textcolor{mymagenta}{custom magenta}, \textcolor{myyellow}{custom yellow}.
 
 \subsection{Severity Test}
 

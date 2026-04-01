@@ -16,16 +16,29 @@
     cvd.enable()
   }
 
-  % Test that black (0 0 0) stays as "0 0 0" not "0.000000 0.000000 0.000000"
-  % to minimize stream growth
+  % Test that RGB black (0 0 0) stays as "0 0 0" not
+  % "0.000000 0.000000 0.000000" to minimize stream growth
   \directlua{
     local stream = "\string\n0 0 0 rg \string\n"
     local result = cvd.process_pdf_image_content(stream)
     -- Should preserve format since black stays black
     if result:match("0 0 0 rg") then
-      tex.print("PASS: Black format preserved")
+      tex.print("PASS: RGB Black format preserved")
     else
-      tex.print("FAIL: Black format changed to " .. result:match("\string\n(.-) rg"))
+      tex.print("FAIL: RGB Black format changed to " .. result:match("\string\n(.-) rg"))
+    end
+  }
+
+  % Test that CMYK black (0 0 0 1) stays as "0 0 0 1" not
+  % "0.000000 0.000000 0.000000 1" to minimize stream growth
+  \directlua{
+    local stream = "\string\n0 0 0 1 k \string\n"
+    local result = cvd.process_pdf_image_content(stream)
+    -- Should preserve format since black stays black
+    if result:match("0 0 0 rg") then
+      tex.print("PASS: CMYK Black format preserved")
+    else
+      tex.print("FAIL: CMYK Black format changed to " .. result:match("\string\n(.-) rg"))
     end
   }
 
