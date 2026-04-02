@@ -286,75 +286,46 @@ function M.process_pdf_image_content(stream)
 		return s
 	end
 
-	-- Transform RGB fill colors (rg operator)
-	-- Match at line start, require non-letter after operator to avoid matching 'rg' in words
-	stream = string.gsub(stream, "\n([%d.]+)%s+([%d.]+)%s+([%d.]+)%s+rg([^a-zA-Z])", function(r, g, b, term)
-		local r_str, g_str, b_str = r, g, b
-		r, g, b = tonumber(r), tonumber(g), tonumber(b)
-		if r and g and b and r >= 0 and r <= 1 and g >= 0 and g <= 1 and b >= 0 and b <= 1 then
-			local r_new, g_new, b_new = M.transform("rgb", r, g, b)
-			-- Keep original format if values haven't changed significantly
-			if math.abs(r_new - r) < 0.000001 and math.abs(g_new - g) < 0.000001 and math.abs(b_new - b) < 0.000001 then
-				return "\n" .. r_str .. " " .. g_str .. " " .. b_str .. " rg" .. term
+	-- Transform colors for any of the supported operators
+	-- Match after space or line start, require non-letter after operator to avoid matching to text
+	stream = string.gsub(
+		stream,
+		"([^a-zA-Z])(%d*%.?%d+) (%d*%.?%d+) (%d*%.?%d+) ([a-zA-Z]+)([^a-zA-Z])",
+		function(prefix, c1, c2, c3, op, suffix)
+			local color_model = ""
+			if op:lower() == "rg" then
+				color_model = "rgb"
+			elseif op:lower() == "k" then
+				color_model = "cmy"
 			end
-			-- Use shortest possible format: strip trailing zeros and decimal point if integer
-			return string.format("\n%s %s %s rg%s", format_short(r_new), format_short(g_new), format_short(b_new), term)
-		end
-		return "\n" .. r_str .. " " .. g_str .. " " .. b_str .. " rg" .. term
-	end)
-
-	-- Transform RGB stroke colors (RG operator)
-	stream = string.gsub(stream, "\n([%d.]+)%s+([%d.]+)%s+([%d.]+)%s+RG([^a-zA-Z])", function(r, g, b, term)
-		local r_str, g_str, b_str = r, g, b
-		r, g, b = tonumber(r), tonumber(g), tonumber(b)
-		if r and g and b and r >= 0 and r <= 1 and g >= 0 and g <= 1 and b >= 0 and b <= 1 then
-			local r_new, g_new, b_new = M.transform("rgb", r, g, b)
-			if math.abs(r_new - r) < 0.000001 and math.abs(g_new - g) < 0.000001 and math.abs(b_new - b) < 0.000001 then
-				return "\n" .. r_str .. " " .. g_str .. " " .. b_str .. " RG" .. term
+			local c1_str, c2_str, c3_str = c1, c2, c3
+			if color_model == "" then
+				return prefix .. c1_str .. " " .. c2_str .. " " .. c3_str .. " " .. op .. suffix
 			end
-			return string.format("\n%s %s %s RG%s", format_short(r_new), format_short(g_new), format_short(b_new), term)
-		end
-		return "\n" .. r_str .. " " .. g_str .. " " .. b_str .. " RG" .. term
-	end)
-
-	-- Transform RGB colors in scn/SCN operators (used with /DeviceRGB color space)
-	stream = string.gsub(stream, "\n([%d.]+)%s+([%d.]+)%s+([%d.]+)%s+scn([^a-zA-Z])", function(r, g, b, term)
-		local r_str, g_str, b_str = r, g, b
-		r, g, b = tonumber(r), tonumber(g), tonumber(b)
-		if r and g and b and r >= 0 and r <= 1 and g >= 0 and g <= 1 and b >= 0 and b <= 1 then
-			local r_new, g_new, b_new = M.transform("rgb", r, g, b)
-			if math.abs(r_new - r) < 0.000001 and math.abs(g_new - g) < 0.000001 and math.abs(b_new - b) < 0.000001 then
-				return "\n" .. r_str .. " " .. g_str .. " " .. b_str .. " scn" .. term
+			texio.write_nl(string.format("Found %s%s %s %s %s%s", prefix, c1, c2, c3, op, suffix))
+			c1, c2, c3 = tonumber(c1), tonumber(c2), tonumber(c3)
+			if c1 and c2 and c3 and c1 >= 0 and c1 <= 1 and c2 >= 0 and c2 <= 1 and c3 >= 0 and c3 <= 1 then
+				local c1_new, c2_new, c3_new = M.transform(color_model, c1, c2, c3)
+				if
+					math.abs(c1_new - c1) < 0.000001
+					and math.abs(c2_new - c2) < 0.000001
+					and math.abs(c3_new - c3) < 0.000001
+				then
+					return prefix .. c1_str .. " " .. c2_str .. " " .. c3_str .. " " .. op .. suffix
+				end
+				return string.format(
+					"%s%s %s %s %s%s",
+					prefix,
+					format_short(c1_new),
+					format_short(c2_new),
+					format_short(c3_new),
+					op,
+					suffix
+				)
 			end
-			return string.format(
-				"\n%s %s %s scn%s",
-				format_short(r_new),
-				format_short(g_new),
-				format_short(b_new),
-				term
-			)
+			return prefix .. c1_str .. " " .. c2_str .. " " .. c3_str .. " " .. op .. suffix
 		end
-		return "\n" .. r_str .. " " .. g_str .. " " .. b_str .. " scn" .. term
-	end)
-
-	stream = string.gsub(stream, "\n([%d.]+)%s+([%d.]+)%s+([%d.]+)%s+SCN([^a-zA-Z])", function(r, g, b, term)
-		local r_str, g_str, b_str = r, g, b
-		r, g, b = tonumber(r), tonumber(g), tonumber(b)
-		if r and g and b and r >= 0 and r <= 1 and g >= 0 and g <= 1 and b >= 0 and b <= 1 then
-			local r_new, g_new, b_new = M.transform("rgb", r, g, b)
-			if math.abs(r_new - r) < 0.000001 and math.abs(g_new - g) < 0.000001 and math.abs(b_new - b) < 0.000001 then
-				return "\n" .. r_str .. " " .. g_str .. " " .. b_str .. " SCN" .. term
-			end
-			return string.format(
-				"\n%s %s %s SCN%s",
-				format_short(r_new),
-				format_short(g_new),
-				format_short(b_new),
-				term
-			)
-		end
-		return "\n" .. r_str .. " " .. g_str .. " " .. b_str .. " SCN" .. term
-	end)
+	)
 
 	local new_length = #stream
 	local growth = new_length - original_length
