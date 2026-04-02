@@ -229,20 +229,37 @@ function M.transform_current_color(color_str)
 		color_model = "cmy"
 	end
 
-	local c1, c2, c3 = string.match(color_str, "^([%d.]+) +([%d.]+) +([%d.]+)")
-	if c1 and c2 and c3 and M.enabled and M.current_type then
-		c1, c2, c3 = tonumber(c1), tonumber(c2), tonumber(c3)
-		local c1_new, c2_new, c3_new = M.transform(color_model, c1, c2, c3)
+	local transformed = color_str
+
+	-- transform the first values (usually fill)
+	local f1, f2, f3 = string.match(color_str, "^(%d*%.?%d+) +(%d*%.?%d+) +(%d*%.?%d+)")
+	if f1 and f2 and f3 and M.enabled and M.current_type then
+		f1, f2, f3 = tonumber(f1), tonumber(f2), tonumber(f3)
+		local f1_new, f2_new, f3_new = M.transform(color_model, f1, f2, f3)
 		-- Replace the color (RGB or CMY) values in the original string
-		local transformed = string.gsub(
+		transformed = string.gsub(
 			color_str,
-			"^[%d.]+ +[%d.]+ +[%d.]+",
-			string.format("%.6f %.6f %.6f", c1_new, c2_new, c3_new),
+			"^%d*%.?%d+ +%d*%.?%d+ +%d*%.?%d+",
+			string.format("%.6f %.6f %.6f", f1_new, f2_new, f3_new),
 			1
 		)
-		return transformed
 	end
-	return color_str
+
+	-- check if there are more values (usually draw) and transform them as well
+	local d1, d2, d3 = string.match(transformed, "([%d.]+) +([%d.]+) +([%d.]+)")
+	if d1 and d2 and d3 and M.enabled and M.current_type then
+		d1, d2, d3 = tonumber(d1), tonumber(d2), tonumber(d3)
+		local d1_new, d2_new, d3_new = M.transform(color_model, d1, d2, d3)
+		-- Replace the color (RGB or CMY) values in the original string
+		transformed = string.gsub(
+			transformed,
+			" +[a-z]+ +%d*%.?%d+ +%d*%.?%d+ +%d*%.?%d+",
+			string.format("%.6f %.6f %.6f", d1_new, d2_new, d3_new),
+			1
+		)
+	end
+
+	return transformed
 end
 
 -- Transform RGB color operators in PDF page content streams
