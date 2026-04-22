@@ -43,6 +43,7 @@ tasks:
     desc: Run pure Lua unit tests
     cmds:
       - texlua tests/lua/run.lua
+      - texlua tests/lua/parsing.lua
 
   ctan:
     desc: Prepare the package for CTAN submission
