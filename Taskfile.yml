@@ -36,7 +36,13 @@ tasks:
   test:
     desc: Run the test suite, checking package functionality
     cmds:
+      - task test-lua
       - l3build-wrapped check
+
+  test-lua:
+    desc: Run pure Lua unit tests
+    cmds:
+      - texlua tests/lua/run.lua
 
   ctan:
     desc: Prepare the package for CTAN submission

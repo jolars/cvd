@@ -30,6 +30,9 @@ jobs:
       - name: Build the devenv shell and run any pre-commit hooks
         run: devenv test
 
+      - name: lua tests
+        run: devenv shell task test-lua
+
       - name: document
         run: devenv shell l3build-wrapped doc
 
