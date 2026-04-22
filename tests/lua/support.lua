@@ -54,6 +54,54 @@ function M.assert_not_equal(actual, unexpected, message)
 	end
 end
 
+function M.assert_not_match(value, pattern, message)
+	if string.match(value, pattern) then
+		error((message or "assert_not_match failed") .. string.format("\npattern: %q\nvalue:   %q", pattern, value), 0)
+	end
+end
+
+function M.assert_unchanged(input, output, message)
+	M.assert_equal(output, input, message or "value should be unchanged")
+end
+
+function M.assert_changed(input, output, message)
+	M.assert_not_equal(output, input, message or "value should be changed")
+end
+
+function M.with_cvd(options, callback)
+	local cvd = M.load_cvd()
+
+	if options.type then
+		cvd.set_type(options.type)
+	end
+
+	if options.severity ~= nil then
+		cvd.set_severity(options.severity)
+	end
+
+	if options.enabled == false then
+		cvd.disable()
+	else
+		cvd.enable()
+	end
+
+	return callback(cvd)
+end
+
+function M.make_case_tests(cases, runner)
+	local tests = {}
+	for _, case in ipairs(cases) do
+		tests[#tests + 1] = {
+			name = case.name,
+			run = function()
+				runner(case)
+			end,
+		}
+	end
+
+	return tests
+end
+
 function M.run_tests(tests)
 	local failed = 0
 	for i, test in ipairs(tests) do
