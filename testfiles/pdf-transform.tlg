@@ -1,10 +1,23 @@
 This is a generated file for the l3build validation system.
 Don't change this file in any respect.
 ============================================================
-TEST 1: PDF~stream~color~transformation
+TEST 1: transform_current_color~with~fill~and~stroke
+============================================================
+Input:~1 0 0 rg 0 1 0 RG
+Output:~0.265135 0.420471 0.000000 rg 0 1 0 RG
 ============================================================
 ============================================================
+TEST 2: process_pdf_image_content~rgb~and~cmyk~black
 ============================================================
-TEST 2: PDF~stream~transformation~accuracy
+RGB~black:~
+0 0 0 rg 
+CMYK~black:~
+0 0 0 1 k 
 ============================================================
+============================================================
+TEST 3: process_pdf_image_content~stream~start~and~stroke
+============================================================
+Stream~start:~1 0 0 rg 
+Stroke~RG:~
+0.5594 0.8669 0.0073 RG 
 ============================================================

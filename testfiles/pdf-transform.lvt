@@ -5,70 +5,54 @@
 
 \START
 
-% Test Lua function for PDF stream transformation
-% This directly tests the stream processing without needing actual PDF files
-
-\TEST{PDF~stream~color~transformation}{
-  % Set up CVD
+\TEST{transform_current_color~with~fill~and~stroke}{
   \directlua{
     cvd.set_type('deuteranopia')
     cvd.set_severity(1.0)
     cvd.enable()
+
+    local input = "1 0 0 rg 0 1 0 RG"
+    local output = cvd.transform_current_color(input)
+    token.set_macro("cvdcolorinput", input)
+    token.set_macro("cvdcoloroutput", output)
   }
 
-  % Test that RGB black (0 0 0) stays as "0 0 0" not
-  % "0.000000 0.000000 0.000000" to minimize stream growth
-  \directlua{
-    local stream = "\string\n0 0 0 rg \string\n"
-    local result = cvd.process_pdf_image_content(stream)
-    -- Should preserve format since black stays black
-    if result:match("0 0 0 rg") then
-      tex.print("PASS: RGB Black format preserved")
-    else
-      tex.print("FAIL: RGB Black format changed to " .. result:match("\string\n(.-) rg"))
-    end
-  }
-
-  % Test that CMYK black (0 0 0 1) stays as "0 0 0 1" not
-  % "0.000000 0.000000 0.000000 1" to minimize stream growth
-  \directlua{
-    local stream = "\string\n0 0 0 1 k \string\n"
-    local result = cvd.process_pdf_image_content(stream)
-    -- Should preserve format since black stays black
-    if result:match("0 0 0 rg") then
-      tex.print("PASS: CMYK Black format preserved")
-    else
-      tex.print("FAIL: CMYK Black format changed to " .. result:match("\string\n(.-) rg"))
-    end
-  }
-
+  \TYPE{Input:~\cvdcolorinput}
+  \TYPE{Output:~\cvdcoloroutput}
   \cvddisable
 }
 
-\TEST{PDF~stream~transformation~accuracy}{
+\TEST{process_pdf_image_content~rgb~and~cmyk~black}{
+  \directlua{
+    cvd.set_type('deuteranopia')
+    cvd.set_severity(1.0)
+    cvd.enable()
+
+    local stream_rgb_black = "\string\n0 0 0 rg \string\n"
+    local stream_cmyk_black = "\string\n0 0 0 1 k \string\n"
+    token.set_macro("cvdrgbblack", cvd.process_pdf_image_content(stream_rgb_black))
+    token.set_macro("cvdcmykblack", cvd.process_pdf_image_content(stream_cmyk_black))
+  }
+
+  \TYPE{RGB~black:~\cvdrgbblack}
+  \TYPE{CMYK~black:~\cvdcmykblack}
+  \cvddisable
+}
+
+\TEST{process_pdf_image_content~stream~start~and~stroke}{
   \directlua{
     cvd.set_type('protanopia')
     cvd.set_severity(1.0)
     cvd.enable()
+
+    local stream_start = "1 0 0 rg \string\n"
+    local stream_stroke = "\string\n0 1 0 RG \string\n"
+    token.set_macro("cvdstreamstart", cvd.process_pdf_image_content(stream_start))
+    token.set_macro("cvdstreamstroke", cvd.process_pdf_image_content(stream_stroke))
   }
 
-  % Test red transforms correctly and uses short format
-  \directlua{
-    local stream = "\string\n1 0 0 rg \string\n"
-    local result = cvd.process_pdf_image_content(stream)
-    -- Red should transform to something like 0.152 0.115 0
-    if result:match("\string\n[0-9.]+") then
-      local r, g, b = result:match("\string\n([0-9.]+) ([0-9.]+) ([0-9.]+) rg")
-      tex.print("Transformed: " .. r .. " " .. g .. " " .. b)
-      -- Check it's using short format (no trailing zeros)
-      if not r:match("0000") then
-        tex.print("PASS: Short format used")
-      else
-        tex.print("FAIL: Long format with trailing zeros")
-      end
-    end
-  }
-
+  \TYPE{Stream~start:~\cvdstreamstart}
+  \TYPE{Stroke~RG:~\cvdstreamstroke}
   \cvddisable
 }
 
