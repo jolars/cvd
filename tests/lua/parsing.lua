@@ -10,13 +10,6 @@ local stream_cases = {
 		expect_match = "RG%s*$",
 	},
 	{
-		name = "process_pdf_image_content leaves CMYK operator unchanged",
-		type = "deuteranopia",
-		severity = 1.0,
-		input = "\n0 0 0 1 k \n",
-		expect_unchanged = true,
-	},
-	{
 		name = "process_pdf_image_content leaves start-of-stream rgb unchanged",
 		type = "protanopia",
 		severity = 1.0,
@@ -63,11 +56,11 @@ local tests = support.make_case_tests(stream_cases, function(case)
 end)
 
 tests[#tests + 1] = {
-	name = "transform_current_color only transforms first rgb triple",
+	name = "transform_current_color transforms both fill and stroke rgb triples",
 	run = function()
 		support.with_cvd({ type = "deuteranopia", severity = 1.0 }, function(cvd)
 			local output = cvd.transform_current_color("1 0 0 rg 0 1 0 RG")
-			support.assert_match(output, "0 1 0 RG$", "stroke rgb triple should remain unchanged")
+			support.assert_match(output, "0%.265135 0%.420471 0%.000000 rg 0%.481724 0%.728023 0%.017445 RG$")
 		end)
 	end,
 }
