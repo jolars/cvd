@@ -302,7 +302,6 @@ function M.process_pdf_image_content(stream)
 			if color_model == "" then
 				return prefix .. c1_str .. " " .. c2_str .. " " .. c3_str .. " " .. op .. suffix
 			end
-			texio.write_nl(string.format("Found %s%s %s %s %s%s", prefix, c1, c2, c3, op, suffix))
 			c1, c2, c3 = tonumber(c1), tonumber(c2), tonumber(c3)
 			if c1 and c2 and c3 and c1 >= 0 and c1 <= 1 and c2 >= 0 and c2 <= 1 and c3 >= 0 and c3 <= 1 then
 				local c1_new, c2_new, c3_new = M.transform(color_model, c1, c2, c3)
