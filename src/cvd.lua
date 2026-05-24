@@ -246,14 +246,14 @@ function M.transform_current_color(color_str)
 	end
 
 	-- check if there are more values (usually draw) and transform them as well
-	local d1, d2, d3 = string.match(transformed, "([%d.]+) +([%d.]+) +([%d.]+)")
+	local d1, d2, d3 = string.match(transformed, " +[a-zA-Z]+ +(%d*%.?%d+) +(%d*%.?%d+) +(%d*%.?%d+)")
 	if d1 and d2 and d3 and M.enabled and M.current_type then
 		d1, d2, d3 = tonumber(d1), tonumber(d2), tonumber(d3)
 		local d1_new, d2_new, d3_new = M.transform(color_model, d1, d2, d3)
 		-- Replace the color (RGB or CMY) values in the original string
 		transformed = string.gsub(
 			transformed,
-			" +[a-z]+ +%d*%.?%d+ +%d*%.?%d+ +%d*%.?%d+",
+			" +[a-zA-Z]+ +%d*%.?%d+ +%d*%.?%d+ +%d*%.?%d+",
 			string.format("%.6f %.6f %.6f", d1_new, d2_new, d3_new),
 			1
 		)
