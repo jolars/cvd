@@ -232,7 +232,7 @@ function M.transform_current_color(color_str)
 	local transformed = color_str
 
 	-- transform the first values (usually fill)
-	local f1, f2, f3 = string.match(color_str, "^(%d*%.?%d+) +(%d*%.?%d+) +(%d*%.?%d+)")
+	local f1, f2, f3 = string.match(color_str, "^(%d*%.?%d+)%s+(%d*%.?%d+)%s+(%d*%.?%d+)")
 	if f1 and f2 and f3 and M.enabled and M.current_type then
 		f1, f2, f3 = tonumber(f1), tonumber(f2), tonumber(f3)
 		if not f1 or not f2 or not f3 then
@@ -249,7 +249,7 @@ function M.transform_current_color(color_str)
 	end
 
 	-- check if there are more values (usually draw) and transform them as well
-	local d1, d2, d3 = string.match(transformed, " +[a-zA-Z]+ +(%d*%.?%d+) +(%d*%.?%d+) +(%d*%.?%d+)")
+	local d1, d2, d3 = string.match(transformed, " +[a-zA-Z]+%s+(%d*%.?%d+)%s+(%d*%.?%d+)%s+(%d*%.?%d+)")
 	if d1 and d2 and d3 and M.enabled and M.current_type then
 		d1, d2, d3 = tonumber(d1), tonumber(d2), tonumber(d3)
 		if not d1 or not d2 or not d3 then
@@ -257,14 +257,9 @@ function M.transform_current_color(color_str)
 		end
 		local d1_new, d2_new, d3_new = M.transform(color_model, d1, d2, d3)
 		-- Replace the color (RGB or CMY) values in the original string
-		transformed = string.gsub(
-			transformed,
-			" +([a-zA-Z]+) +%d*%.?%d+ +%d*%.?%d+ +%d*%.?%d+",
-			function(op)
-				return string.format(" %s %.6f %.6f %.6f", op, d1_new, d2_new, d3_new)
-			end,
-			1
-		)
+		transformed = string.gsub(transformed, " +([a-zA-Z]+) +%d*%.?%d+ +%d*%.?%d+ +%d*%.?%d+", function(op)
+			return string.format(" %s %.6f %.6f %.6f", op, d1_new, d2_new, d3_new)
+		end, 1)
 	end
 
 	return transformed
@@ -298,7 +293,7 @@ function M.process_pdf_image_content(stream)
 	-- Match after space or line start, require non-letter after operator to avoid matching to text
 	stream = string.gsub(
 		stream,
-		"([^a-zA-Z])(%d*%.?%d+) (%d*%.?%d+) (%d*%.?%d+) ([a-zA-Z]+)([^a-zA-Z])",
+		"([^a-zA-Z])(%d*%.?%d+)%s(%d*%.?%d+)%s(%d*%.?%d+)%s([a-zA-Z]+)([^a-zA-Z])",
 		function(prefix, c1, c2, c3, op, suffix)
 			local color_model = ""
 			if op:lower() == "rg" then
