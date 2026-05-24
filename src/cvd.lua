@@ -235,6 +235,9 @@ function M.transform_current_color(color_str)
 	local f1, f2, f3 = string.match(color_str, "^(%d*%.?%d+) +(%d*%.?%d+) +(%d*%.?%d+)")
 	if f1 and f2 and f3 and M.enabled and M.current_type then
 		f1, f2, f3 = tonumber(f1), tonumber(f2), tonumber(f3)
+		if not f1 or not f2 or not f3 then
+			return color_str
+		end
 		local f1_new, f2_new, f3_new = M.transform(color_model, f1, f2, f3)
 		-- Replace the color (RGB or CMY) values in the original string
 		transformed = string.gsub(
@@ -249,6 +252,9 @@ function M.transform_current_color(color_str)
 	local d1, d2, d3 = string.match(transformed, " +[a-zA-Z]+ +(%d*%.?%d+) +(%d*%.?%d+) +(%d*%.?%d+)")
 	if d1 and d2 and d3 and M.enabled and M.current_type then
 		d1, d2, d3 = tonumber(d1), tonumber(d2), tonumber(d3)
+		if not d1 or not d2 or not d3 then
+			return color_str
+		end
 		local d1_new, d2_new, d3_new = M.transform(color_model, d1, d2, d3)
 		-- Replace the color (RGB or CMY) values in the original string
 		transformed = string.gsub(

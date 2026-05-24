@@ -1,4 +1,4 @@
-name: Build-and-Test
+name: Continuous Integration
 
 on:
   workflow_dispatch:
@@ -30,8 +30,30 @@ jobs:
       - name: Build the devenv shell and run any pre-commit hooks
         run: devenv test
 
+      - name: lua tests
+        run: devenv shell task test-lua
+
       - name: document
         run: devenv shell l3build-wrapped doc
 
       - name: build
         run: devenv shell l3build-wrapped ctan -q -H --show-log-on-error
+
+  versionary:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - id: versionary
+        uses: jolars/versionary@v0
+        with:
+          github-token: ${{ secrets.RELEASE_TOKEN }}
