@@ -259,8 +259,10 @@ function M.transform_current_color(color_str)
 		-- Replace the color (RGB or CMY) values in the original string
 		transformed = string.gsub(
 			transformed,
-			" +[a-zA-Z]+ +%d*%.?%d+ +%d*%.?%d+ +%d*%.?%d+",
-			string.format("%.6f %.6f %.6f", d1_new, d2_new, d3_new),
+			" +([a-zA-Z]+) +%d*%.?%d+ +%d*%.?%d+ +%d*%.?%d+",
+			function(op)
+				return string.format(" %s %.6f %.6f %.6f", op, d1_new, d2_new, d3_new)
+			end,
 			1
 		)
 	end
