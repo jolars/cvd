@@ -222,10 +222,11 @@ function M.transform_current_color(color_str)
 	-- "1 0 0 rg 1 0 0 RG" in RGB or "1 0 0 0 k 1 0 0 0 K" in CMYK
 	-- Extract just the color model ("rgb" or "cmy") and the corresponding
 	-- channel values R G B or C M Y (denoted c1, c2, c3)
-	local color_model = string.match(color_str, "rg") or string.match(color_str, "k")
-	if color_model == "rg" then
+	local color_model = (string.match(color_str, "rg") or string.match(color_str, "RG") or 
+	                    string.match(color_str, "k") or string.match(color_str, "K"))
+	if color_model == "rg" or color_model == "RG" then
 		color_model = "rgb"
-	elseif color_model == "k" then
+	elseif color_model == "k" or color_model == "K" then
 		color_model = "cmy"
 	end
 
