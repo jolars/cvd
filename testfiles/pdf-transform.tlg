@@ -4,7 +4,7 @@ Don't change this file in any respect.
 TEST 1: transform_current_color~with~fill~and~stroke
 ============================================================
 Input:~1 0 0 rg 0 1 0 RG
-Output:~0.265135 0.420471 0.000000 rg 0 1 0 RG
+Output:~0.265135 0.420471 0.000000 rg 0.481724 0.728023 0.017445 RG
 ============================================================
 ============================================================
 TEST 2: process_pdf_image_content~rgb~and~cmyk~black
