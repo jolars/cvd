@@ -66,6 +66,161 @@ local tests = {
 			support.assert_equal(out, input, "text content should remain untouched")
 		end,
 	},
+	{
+		name = "transform_current_color transforms cmyk when enabled",
+		run = function()
+			local cvd = support.load_cvd()
+			cvd.set_type("deuteranopia")
+			cvd.set_severity(1.0)
+			cvd.enable()
+
+			local out = cvd.transform_current_color("0 1 0 0 k")
+			support.assert_equal(out, "0.256394 0.174226 0.160300 0 k", "unexpected transformed cmyk value")
+		end,
+	},
+	{
+		name = "transform_current_color transforms cmyk with K operator",
+		run = function()
+			local cvd = support.load_cvd()
+			cvd.set_type("deuteranopia")
+			cvd.set_severity(1.0)
+			cvd.enable()
+
+			local out = cvd.transform_current_color("1 0 0 0 K")
+			support.assert_equal(out, "0.998143 0.074525 0.000000 0 K", "unexpected transformed CMYK value with uppercase K")
+		end,
+	},
+	{
+		name = "transform_current_color preserves K value in cmyk",
+		run = function()
+			local cvd = support.load_cvd()
+			cvd.set_type("deuteranopia")
+			cvd.set_severity(1.0)
+			cvd.enable()
+
+			local out = cvd.transform_current_color("0 1 0 0.5 k")
+			support.assert_match(out, "0%.256394 0%.174226 0%.160300 0.5 k$", "K value should be preserved")
+		end,
+	},
+	{
+		name = "transform_current_color transforms both fill and stroke cmyk",
+		run = function()
+			local cvd = support.load_cvd()
+			cvd.set_type("deuteranopia")
+			cvd.set_severity(1.0)
+			cvd.enable()
+
+			local output = cvd.transform_current_color("0 1 0 0 k 1 0 0 0 K")
+			support.assert_match(output, "0%.256394 0%.174226 0%.160300 0 k 0%.998143 0%.074525 0%.000000 0 K$", "both fill and stroke CMYK values should be transformed")
+		end,
+	},
+	{
+		name = "transform_current_color transforms both fill and stroke rgb triples",
+		run = function()
+			local cvd = support.load_cvd()
+			cvd.set_type("deuteranopia")
+			cvd.set_severity(1.0)
+			cvd.enable()
+
+			local output = cvd.transform_current_color("1 0 0 rg 0 1 0 RG")
+			support.assert_match(output, "0%.265135 0%.420471 0%.000000 rg 0%.481724 0%.728023 0%.017445 RG$")
+		end,
+	},
+	{
+		name = "transform with rgb color model",
+		run = function()
+			local cvd = support.load_cvd()
+			cvd.set_type("deuteranopia")
+			cvd.set_severity(1.0)
+			cvd.enable()
+
+			local r, g, b = cvd.transform("rgb", 1.0, 0.0, 0.0)
+			support.assert_equal(string.format("%.6f", r), "0.265135", "unexpected rgb r value")
+			support.assert_equal(string.format("%.6f", g), "0.420471", "unexpected rgb g value")
+			support.assert_equal(string.format("%.6f", b), "0.000000", "unexpected rgb b value")
+		end,
+	},
+	{
+		name = "transform with cmy color model",
+		run = function()
+			local cvd = support.load_cvd()
+			cvd.set_type("deuteranopia")
+			cvd.set_severity(1.0)
+			cvd.enable()
+
+			local c, m, y = cvd.transform("cmy", 0.0, 1.0, 0.0)
+			support.assert_equal(string.format("%.6f", c), "0.256394", "unexpected cmy c value")
+			support.assert_equal(string.format("%.6f", m), "0.174226", "unexpected cmy m value")
+			support.assert_equal(string.format("%.6f", y), "0.160300", "unexpected cmy y value")
+		end,
+	},
+	{
+		name = "transform_current_color with tritanopia",
+		run = function()
+			local cvd = support.load_cvd()
+			cvd.set_type("tritanopia")
+			cvd.set_severity(1.0)
+			cvd.enable()
+
+			local out = cvd.transform_current_color("1 0 0 rg")
+			support.assert_equal(out, "1.000000 0.000000 0.014249 rg", "tritanopia should transform rgb")
+		end,
+	},
+	{
+		name = "transform_current_color with tritanopia and cmyk",
+		run = function()
+			local cvd = support.load_cvd()
+			cvd.set_type("tritanopia")
+			cvd.set_severity(1.0)
+			cvd.enable()
+
+			local out = cvd.transform_current_color("0 1 0 0 k")
+			support.assert_equal(out, "0.140349 0.000000 0.246554 0 k", "tritanopia should transform cmyk")
+		end,
+	},
+	{
+		name = "transform_current_color with severity 0.0 does not transform",
+		run = function()
+			local cvd = support.load_cvd()
+			cvd.set_type("deuteranopia")
+			cvd.set_severity(0.0)
+			cvd.enable()
+
+			local input = "1 0 0 rg"
+			local out = cvd.transform_current_color(input)
+			-- At severity 0.0, values should be unchanged but may be reformatted
+			support.assert_match(out, "1%.0+ 0%.0+ 0%.0+ rg$", "severity 0.0 should not transform colors")
+		end,
+	},
+	{
+		name = "transform_current_color with severity 0.5 transforms partially",
+		run = function()
+			local cvd = support.load_cvd()
+			cvd.set_type("deuteranopia")
+			cvd.set_severity(0.5)
+			cvd.enable()
+
+			local out = cvd.transform_current_color("1 0 0 rg")
+			-- Values should be between original (1,0,0) and full (0.265135,0.420471,0.000000)
+			local r = tonumber(string.match(out, "^(%S+)"))
+			if not (r > 0.265135 and r < 0.999) then
+				error("r value should be partially transformed at severity 0.5, got " .. r, 0)
+			end
+		end,
+	},
+	{
+		name = "transform_current_color disabled returns unchanged",
+		run = function()
+			local cvd = support.load_cvd()
+			cvd.set_type("deuteranopia")
+			cvd.set_severity(1.0)
+			cvd.disable()
+
+			local input = "1 0 0 rg"
+			local out = cvd.transform_current_color(input)
+			support.assert_equal(out, input, "disabled state should not transform")
+		end,
+	},
 }
 
 support.run_tests(tests)
