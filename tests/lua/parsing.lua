@@ -65,4 +65,34 @@ tests[#tests + 1] = {
 	end,
 }
 
+tests[#tests + 1] = {
+	name = "transform_current_color transforms cmyk with lowercase k operator",
+	run = function()
+		support.with_cvd({ type = "deuteranopia", severity = 1.0 }, function(cvd)
+			local output = cvd.transform_current_color("0 1 0 k")
+			support.assert_equal(output, "0.256394 0.174226 0.160300 k")
+		end)
+	end,
+}
+
+tests[#tests + 1] = {
+	name = "transform_current_color transforms cmyk with uppercase K operator",
+	run = function()
+		support.with_cvd({ type = "deuteranopia", severity = 1.0 }, function(cvd)
+			local output = cvd.transform_current_color("1 0 0 K")
+			support.assert_equal(output, "0.998143 0.074525 0.000000 K")
+		end)
+	end,
+}
+
+tests[#tests + 1] = {
+	name = "transform_current_color transforms both fill and stroke cmyk triples",
+	run = function()
+		support.with_cvd({ type = "deuteranopia", severity = 1.0 }, function(cvd)
+			local output = cvd.transform_current_color("0 1 0 k 1 0 0 K")
+			support.assert_match(output, "0%.256394 0%.174226 0%.160300 k 0%.998143 0%.074525 0%.000000 K$")
+		end)
+	end,
+}
+
 support.run_tests(tests)

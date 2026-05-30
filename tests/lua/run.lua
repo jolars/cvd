@@ -66,6 +66,54 @@ local tests = {
 			support.assert_equal(out, input, "text content should remain untouched")
 		end,
 	},
+	{
+		name = "transform_current_color transforms cmyk when enabled",
+		run = function()
+			local cvd = support.load_cvd()
+			cvd.set_type("deuteranopia")
+			cvd.set_severity(1.0)
+			cvd.enable()
+
+			local out = cvd.transform_current_color("0 1 0 k")
+			support.assert_equal(out, "0.256394 0.174226 0.160300 k", "unexpected transformed cmyk value")
+		end,
+	},
+	{
+		name = "transform_current_color transforms cmyk with K operator",
+		run = function()
+			local cvd = support.load_cvd()
+			cvd.set_type("deuteranopia")
+			cvd.set_severity(1.0)
+			cvd.enable()
+
+			local out = cvd.transform_current_color("1 0 0 K")
+			support.assert_equal(out, "0.998143 0.074525 0.000000 K", "unexpected transformed CMYK value with uppercase K")
+		end,
+	},
+	{
+		name = "transform_current_color preserves K value in cmyk",
+		run = function()
+			local cvd = support.load_cvd()
+			cvd.set_type("deuteranopia")
+			cvd.set_severity(1.0)
+			cvd.enable()
+
+			local out = cvd.transform_current_color("0 1 0 0.5 k")
+			support.assert_match(out, "0%.256394 0%.174226 0%.160300 0.5 k$", "K value should be preserved")
+		end,
+	},
+	{
+		name = "transform_current_color transforms both fill and stroke cmyk triples",
+		run = function()
+			local cvd = support.load_cvd()
+			cvd.set_type("deuteranopia")
+			cvd.set_severity(1.0)
+			cvd.enable()
+
+			local output = cvd.transform_current_color("0 1 0 k 1 0 0 K")
+			support.assert_match(output, "0%.256394 0%.174226 0%.160300 k 0%.998143 0%.074525 0%.000000 K$", "both fill and stroke CMYK triples should be transformed")
+		end,
+	},
 }
 
 support.run_tests(tests)
