@@ -293,7 +293,7 @@ function M.process_pdf_image_content(stream)
 	-- Match after space or line start, require non-letter after operator to avoid matching to text
 	stream = string.gsub(
 		stream,
-		"([^a-zA-Z])(%d*%.?%d+)%s(%d*%.?%d+)%s(%d*%.?%d+)%s([a-zA-Z]+)([^a-zA-Z])",
+		"([^a-zA-Z%d.])(%d*%.?%d+)%s(%d*%.?%d+)%s(%d*%.?%d+)%s([a-zA-Z]+)([^a-zA-Z%d.])",
 		function(prefix, c1, c2, c3, op, suffix)
 			local color_model = ""
 			if op:lower() == "rg" then
