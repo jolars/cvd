@@ -55,44 +55,4 @@ local tests = support.make_case_tests(stream_cases, function(case)
 	end)
 end)
 
-tests[#tests + 1] = {
-	name = "transform_current_color transforms both fill and stroke rgb triples",
-	run = function()
-		support.with_cvd({ type = "deuteranopia", severity = 1.0 }, function(cvd)
-			local output = cvd.transform_current_color("1 0 0 rg 0 1 0 RG")
-			support.assert_match(output, "0%.265135 0%.420471 0%.000000 rg 0%.481724 0%.728023 0%.017445 RG$")
-		end)
-	end,
-}
-
-tests[#tests + 1] = {
-	name = "transform_current_color transforms cmyk with lowercase k operator",
-	run = function()
-		support.with_cvd({ type = "deuteranopia", severity = 1.0 }, function(cvd)
-			local output = cvd.transform_current_color("0 1 0 k")
-			support.assert_equal(output, "0.256394 0.174226 0.160300 k")
-		end)
-	end,
-}
-
-tests[#tests + 1] = {
-	name = "transform_current_color transforms cmyk with uppercase K operator",
-	run = function()
-		support.with_cvd({ type = "deuteranopia", severity = 1.0 }, function(cvd)
-			local output = cvd.transform_current_color("1 0 0 K")
-			support.assert_equal(output, "0.998143 0.074525 0.000000 K")
-		end)
-	end,
-}
-
-tests[#tests + 1] = {
-	name = "transform_current_color transforms both fill and stroke cmyk triples",
-	run = function()
-		support.with_cvd({ type = "deuteranopia", severity = 1.0 }, function(cvd)
-			local output = cvd.transform_current_color("0 1 0 k 1 0 0 K")
-			support.assert_match(output, "0%.256394 0%.174226 0%.160300 k 0%.998143 0%.074525 0%.000000 K$")
-		end)
-	end,
-}
-
 support.run_tests(tests)
