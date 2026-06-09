@@ -313,6 +313,37 @@ function M.transform_current_color(color_str)
 	return transformed
 end
 
+-- Transform an RGB tuple emitted by pgf for shading /C0 /C1 arrays.
+-- Inputs are the three component strings as passed to \pgf@getrgb@@.
+-- Returns a space-separated PDF tuple suitable for embedding in a Function
+-- dictionary. When cvd is disabled, the original strings are returned
+-- unchanged.
+function M.transform_pgf_rgb(r, g, b)
+	local nr, ng, nb = tonumber(r), tonumber(g), tonumber(b)
+	-- Pass the original strings through unchanged when cvd is disabled or
+	-- when a component is not a parseable number (rather than silently
+	-- coercing it to 0, which would emit a wrong color).
+	if not (M.enabled and M.current_type) or not (nr and ng and nb) then
+		return string.format("%s %s %s", r, g, b)
+	end
+	nr, ng, nb = M.transform("rgb", nr, ng, nb)
+	return string.format("%.6f %.6f %.6f", nr, ng, nb)
+end
+
+-- Transform a CMYK tuple emitted by pgf for shading /C0 /C1 arrays.
+-- The K component is preserved unchanged, matching transform_current_color.
+function M.transform_pgf_cmyk(c, m, y, k)
+	local nc, nm, ny = tonumber(c), tonumber(m), tonumber(y)
+	-- Pass the original strings through unchanged when cvd is disabled or
+	-- when a component is not a parseable number. The K component is left
+	-- as-is regardless, matching transform_current_color.
+	if not (M.enabled and M.current_type) or not (nc and nm and ny) then
+		return string.format("%s %s %s %s", c, m, y, k)
+	end
+	nc, nm, ny = M.transform("cmy", nc, nm, ny)
+	return string.format("%.6f %.6f %.6f %s", nc, nm, ny, k)
+end
+
 -- Transform RGB color operators in PDF page content streams
 -- NOTE: This function modifies the uncompressed PDF stream content. Due to limitations
 -- in LuaTeX's process_pdf_image_content callback, the stream length may not always be
