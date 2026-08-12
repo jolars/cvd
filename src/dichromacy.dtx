@@ -57,11 +57,12 @@
 %
 % \subsection{Hook into xcolor}
 %
-% Use \texttt{xcolor}'s \cs{XC@bcolor} hook to transform RGB values before display.
-% This handles text colors, color boxes, and other \texttt{xcolor}-based content.
+% Transform the PDF color operators in \cs{current@color} before
+% \texttt{xcolor} hands them to \cs{set@color}. This handles text colors, color
+% boxes, and other \texttt{xcolor}-based content.
 %
 %    \begin{macrocode}
-\cs_set:Npn \XC@bcolor
+\cs_new_protected:Npn \__dichromacy_transform_current_color:
 {
   \directlua
   {
@@ -70,6 +71,43 @@
     "global")
   }
 }
+%    \end{macrocode}
+%
+% \texttt{xcolor}'s \cs{XC@display} runs three hooks around the color it is
+% about to select: \cs{XC@bcolor}, then \cs{XC@mcolor}, then \cs{set@color} and
+% \cs{XC@ecolor}. We attach to \cs{XC@mcolor}, the last one before the color is
+% actually emitted, because a package that hooks earlier can rewrite
+% \cs{current@color} from the untransformed color and undo our work.
+% \pkg{xxcolor} (loaded by \pkg{beamer}) does exactly that: its
+% \texttt{colormixin} support appends to \cs{XC@mcolor} and recomputes
+% \cs{current@color} from the mixed original color. Running after it is also
+% the right order, since the mix is then computed on true colors and only the
+% resulting color is simulated.
+%
+% Installing removes any previous copy of our hook before appending, so it is
+% idempotent and can be repeated: once here, and again at
+% \cs{begin}\marg{document} in case \pkg{xxcolor} or another package appended
+% to \cs{XC@mcolor} after \pkg{dichromacy} was loaded.
+%
+%    \begin{macrocode}
+\tl_new:N \l__dichromacy_mcolor_tl
+\cs_new_protected:Npn \__dichromacy_hook_xcolor:
+{
+  \cs_if_eq:NNTF \XC@mcolor \scan_stop:
+    { \cs_set:Npn \XC@mcolor { \__dichromacy_transform_current_color: } }
+    {
+      \tl_set:No \l__dichromacy_mcolor_tl { \XC@mcolor }
+      \tl_remove_all:Nn \l__dichromacy_mcolor_tl
+        { \__dichromacy_transform_current_color: }
+      \cs_set:Npx \XC@mcolor
+        {
+          \exp_not:V \l__dichromacy_mcolor_tl
+          \exp_not:N \__dichromacy_transform_current_color:
+        }
+    }
+}
+\__dichromacy_hook_xcolor:
+\AtBeginDocument { \__dichromacy_hook_xcolor: }
 %    \end{macrocode}
 %
 % \subsection{Hook into pgf Shadings}

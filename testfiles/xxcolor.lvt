@@ -1,0 +1,45 @@
+\input{regression-test.tex}
+\documentclass{minimal}
+\usepackage{xcolor}
+\usepackage{pgfcore}
+\usepackage{xxcolor}
+\usepackage{dichromacy}
+
+\START
+
+\makeatletter
+
+% xxcolor (loaded by beamer) appends to \XC@mcolor and rebuilds
+% \current@color from the untransformed colour. dichromacy must run after it,
+% otherwise the simulation is silently discarded. See issue #26.
+\TEST{xxcolor~mixin~does~not~discard~the~transform}{
+  \cvdtype{deuteranopia}
+  \cvdseverity{1.0}
+  \cvdenable
+  \color{red}
+  \TYPE{red:~\current@color}
+  \cvddisable
+}
+
+% Inside a colormixin the mix is computed on the true colours and only the
+% resulting colour is simulated.
+\TEST{colormixin~is~mixed~before~the~transform}{
+  \cvdtype{deuteranopia}
+  \cvdseverity{1.0}
+  \cvdenable
+  \begin{colormixin}{25!black}
+    \color{red}
+    \TYPE{red!25!black:~\current@color}
+  \end{colormixin}
+  \cvddisable
+}
+
+\TEST{xxcolor~colours~unchanged~when~disabled}{
+  \cvddisable
+  \color{red}
+  \TYPE{red:~\current@color}
+}
+
+\makeatother
+
+\END
